@@ -1721,44 +1721,51 @@
     }
 
     function updateCompletionHistory() {
-      if (!Array.isArray(state.completionHistory)) {
-        state.completionHistory = [];
-      }
+  if (!Array.isArray(state.completionHistory)) {
+    state.completionHistory = [];
+  }
 
-      const date = getLocalDateKey();
-      const totalCount = state.habits.length;
-      const completedCount = state.habits.filter(habit => habit.complete).length;
-      const completed = isPerfectDayForHabits(state.habits);
+  const date = getLocalDateKey();
 
-      const record = {
-        date,
-        completed,
-        completedCount,
-        totalCount
-      };
+  // Sum XP from all completed habits today
+  const todayXp = (state.habits || [])
+    .filter(habit => habit.complete)
+    .reduce((sum, habit) => sum + (habit.reward || 0), 0);
 
-      const existingIndex = state.completionHistory.findIndex(
-        item => item.date === date
-      );
+  const totalCount = state.habits.length;
+  const completedCount = state.habits.filter(habit => habit.complete).length;
+  const completed = isPerfectDayForHabits(state.habits);
 
-      if (existingIndex >= 0) {
-        state.completionHistory[existingIndex] = record;
-      } else {
-        state.completionHistory.push(record);
-      }
+  const record = {
+    date,
+    completed,
+    completedCount,
+    totalCount,
+    xp: todayXp
+  };
 
-      // Keep a reasonable amount of history in the user document.
-      state.completionHistory = state.completionHistory
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(-400);
+  const existingIndex = state.completionHistory.findIndex(
+    item => item.date === date
+  );
 
-      const streaks = calculateStreaks(state.completionHistory);
-      state.currentStreak = streaks.currentStreak;
-      state.bestStreak = Math.max(
-        Number(state.bestStreak) || 0,
-        streaks.bestStreak
-      );
-    }
+  if (existingIndex >= 0) {
+    state.completionHistory[existingIndex] = record;
+  } else {
+    state.completionHistory.push(record);
+  }
+
+  // Keep a reasonable amount of history in the user document.
+  state.completionHistory = state.completionHistory
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-400);
+
+  const streaks = calculateStreaks(state.completionHistory);
+  state.currentStreak = streaks.currentStreak;
+  state.bestStreak = Math.max(
+    Number(state.bestStreak) || 0,
+    streaks.bestStreak
+  );
+}
 
     function renderStreaks() {
       const streaks = calculateStreaks(state.completionHistory || []);
@@ -1870,34 +1877,33 @@
     }
 
     function getLeaderboardScore(player) {
-      const history = player.completionHistory || [];
+  const history = player.completionHistory || [];
 
-      if (leaderboardMode === "daily") {
-        const today = getLocalDateKey();
-        return history.some(record =>
-          record.date === today && record.completed === true
-        ) ? 1 : 0;
-      }
+  if (leaderboardMode === "daily") {
+    const today = getLocalDateKey();
+    return history
+      .filter(record => record.date === today)
+      .reduce((sum, record) => sum + (record.xp || 0), 0);
+  }
 
-      const weekStart = getWeekStartKey();
-      const today = getLocalDateKey();
+  const weekStart = getWeekStartKey();
+  const today = getLocalDateKey();
 
-      return history.filter(record =>
-        record.date >= weekStart &&
-        record.date <= today &&
-        record.completed === true
-      ).length;
-    }
+  return history
+    .filter(record =>
+      record.date >= weekStart &&
+      record.date <= today
+    )
+    .reduce((sum, record) => sum + (record.xp || 0), 0);
+}
 
-    function getLeaderboardSubtitle(player, score) {
-      if (leaderboardMode === "daily") {
-        return score === 1
-          ? "Perfect day"
-          : "Still in progress";
-      }
+function getLeaderboardSubtitle(player, score) {
+  if (leaderboardMode === "daily") {
+    return `${score} XP today`;
+  }
 
-      return `${score} perfect day${score === 1 ? "" : "s"} this week`;
-    }
+  return `${score} XP this week`;
+}
 
     function renderLeaderboardFromSnapshot(players) {
       const leaderboard = document.getElementById("leaderboard");
