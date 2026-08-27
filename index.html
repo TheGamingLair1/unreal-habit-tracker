@@ -1754,18 +1754,7 @@
     state.completionHistory.push(record);
   }
 
-  // Keep a reasonable amount of history in the user document.
-  state.completionHistory = state.completionHistory
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(-400);
-
-  const streaks = calculateStreaks(state.completionHistory);
-  state.currentStreak = streaks.currentStreak;
-  state.bestStreak = Math.max(
-    Number(state.bestStreak) || 0,
-    streaks.bestStreak
-  );
-}
+  // Keep a
 
     function renderStreaks() {
       const streaks = calculateStreaks(state.completionHistory || []);
