@@ -927,6 +927,59 @@
       border-color: var(--blue);
     }
 
+    /* Streaks and leaderboard periods */
+    .streak-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 11px;
+    }
+
+    .streak-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.035)),
+        var(--card);
+    }
+
+    .streak-card-value {
+      color: var(--orange);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -.07em;
+    }
+
+    .streak-card-label {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .leaderboard-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    .leaderboard-tab {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .leaderboard-tab.active {
+      background: rgba(97,231,255,.13);
+      border-color: rgba(97,231,255,.4);
+      color: var(--cyan);
+    }
+
     @media (min-width: 620px) {
       .modal-backdrop {
         align-items: center;
@@ -948,7 +1001,7 @@
   </style>
 </head>
 <body>
-  <!-- AUTH VIEW -->
+    <!-- AUTH VIEW -->
   <main class="app auth-view" id="authView">
     <div class="eyebrow" style="text-align:center">Personal evolution system</div>
     <h1 style="text-align:center; margin-top:6px">UNREAL<br>HABIT TRACKER</h1>
@@ -1009,6 +1062,30 @@
         </div>
       </div>
 
+      <!-- STREAKS -->
+      <div class="section">
+        <div class="section-heading">
+          <h2>Consistency</h2>
+          <span id="streakStatus">Keep the chain alive</span>
+        </div>
+
+        <div class="streak-grid">
+          <div class="streak-card glass">
+            <div class="streak-card-value">
+              🔥 <span id="currentStreakValue">0</span>
+            </div>
+            <div class="streak-card-label">CURRENT STREAK</div>
+          </div>
+
+          <div class="streak-card glass">
+            <div class="streak-card-value">
+              🏆 <span id="bestStreakValue">0</span>
+            </div>
+            <div class="streak-card-label">BEST STREAK</div>
+          </div>
+        </div>
+      </div>
+
       <div class="section">
         <div class="section-heading">
           <h2>Today's missions</h2>
@@ -1041,49 +1118,6 @@
             <button class="secondary-button" id="removeSelectedHabits" style="display:none">Remove selected</button>
           </div>
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-heading">
-          <h2>Bad habits tracker</h2>
-          <span>Penalties</span>
-        </div>
-        <div class="bad-card glass" style="margin-bottom:11px">
-          <div class="card-top">
-            <div>
-              <h3>Log slip-ups</h3>
-              <p class="card-description">
-                Tap a bad habit when it happens. XP is deducted each time.
-              </p>
-            </div>
-            <span>⚠️</span>
-          </div>
-          <div class="add-bad-row">
-            <input id="newBadName" type="text" placeholder="Bad habit (e.g., Swearing)" />
-            <input id="newBadPenalty" type="number" min="1" placeholder="XP" value="15" />
-            <input id="newBadIcon" type="text" placeholder="Icon" value="🤬" />
-            <button class="remove-item" id="addBadBtn">＋</button>
-          </div>
-          <div class="bad-habits-grid" id="badHabitsGrid"></div>
-        </div>
-
-        <div class="edit-bar">
-          <div class="edit-bar-copy">
-            Manage bad habits
-          </div>
-          <div class="edit-buttons">
-            <button class="secondary-button" id="toggleBadEdit">Select to remove</button>
-            <button class="secondary-button" id="removeSelectedBad" style="display:none">Remove selected</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-heading">
-          <h2>Squad leaderboard</h2>
-          <span>Live ranking</span>
-        </div>
-        <div class="leaderboard glass" id="leaderboard"></div>
       </div>
 
       <div class="section">
@@ -1127,31 +1161,85 @@
         </div>
       </div>
 
-<!-- Daily reminder (selectable time) -->
-<div class="profile-bar" style="margin-top:18px; flex-wrap: wrap; gap: 8px;">
-  <div class="profile-copy" style="flex: 1 1 100%;">
-    Daily reminder time
-  </div>
-  <input
-    id="reminderTimeInput"
-    type="time"
-    step="60"
-    value="07:00"
-    style="
-      height: 40px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      padding: 0 12px;
-      font-size: 13px;
-      outline: none;
-      min-width: 120px;
-    "
-  />
-  <button class="secondary-button" id="setReminderBtn">Set reminder</button>
-</div>
-<div id="reminderStatus" class="profile-copy" style="margin-top:6px; text-align:center"></div>
+      <div class="section">
+        <div class="section-heading">
+          <h2>Bad habits tracker</h2>
+          <span>Penalties</span>
+        </div>
+        <div class="bad-card glass" style="margin-bottom:11px">
+          <div class="card-top">
+            <div>
+              <h3>Log slip-ups</h3>
+              <p class="card-description">
+                Tap a bad habit when it happens. XP is deducted each time.
+              </p>
+            </div>
+            <span>⚠️</span>
+          </div>
+          <div class="add-bad-row">
+            <input id="newBadName" type="text" placeholder="Bad habit (e.g., Swearing)" />
+            <input id="newBadPenalty" type="number" min="1" placeholder="XP" value="15" />
+            <input id="newBadIcon" type="text" placeholder="Icon" value="🤬" />
+            <button class="remove-item" id="addBadBtn">＋</button>
+          </div>
+          <div class="bad-habits-grid" id="badHabitsGrid"></div>
+        </div>
+
+        <div class="edit-bar">
+          <div class="edit-bar-copy">
+            Manage bad habits
+          </div>
+          <div class="edit-buttons">
+            <button class="secondary-button" id="toggleBadEdit">Select to remove</button>
+            <button class="secondary-button" id="removeSelectedBad" style="display:none">Remove selected</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="section">
+        <div class="section-heading">
+          <h2>Squad leaderboard</h2>
+          <span id="leaderboardPeriodLabel">Today</span>
+        </div>
+
+        <div class="leaderboard-tabs">
+          <button class="leaderboard-tab active" id="dailyLeaderboardTab">
+            Daily
+          </button>
+          <button class="leaderboard-tab" id="weeklyLeaderboardTab">
+            Weekly
+          </button>
+        </div>
+
+        <div class="leaderboard glass" id="leaderboard"></div>
+      </div>
+
+      <!-- Daily reminder (selectable time) -->
+      <div class="profile-bar" style="margin-top:18px; flex-wrap: wrap; gap: 8px;">
+        <div class="profile-copy" style="flex: 1 1 100%;">
+          Daily reminder time
+        </div>
+        <input
+          id="reminderTimeInput"
+          type="time"
+          step="60"
+          value="07:00"
+          style="
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(0,0,0,.25);
+            color: var(--text);
+            padding: 0 12px;
+            font-size: 13px;
+            outline: none;
+            min-width: 120px;
+          "
+        />
+        <button class="secondary-button" id="setReminderBtn">Set reminder</button>
+      </div>
+      <div id="reminderStatus" class="profile-copy" style="margin-top:6px; text-align:center"></div>
 
       <!-- Edit profile -->
       <div class="profile-bar">
@@ -1349,19 +1437,18 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // =========================
-    // PASTE YOUR FIREBASE CONFIG HERE
+        // =========================
+    // FIREBASE CONFIG
     // =========================
     const firebaseConfig = {
-  apiKey: "AIzaSyDvwk5pab07snh55VfTrjAAbS46uj2yHIw",
-  authDomain: "unreal-habit-tracker.firebaseapp.com",
-  projectId: "unreal-habit-tracker",
-  storageBucket: "unreal-habit-tracker.firebasestorage.app",
-  messagingSenderId: "371080969827",
-  appId: "1:371080969827:web:95bbdb41978665b5f28256",
-  measurementId: "G-VXLTQEBWEP"
-};
-
+      apiKey: "AIzaSyDvwk5pab07snh55VfTrjAAbS46uj2yHIw",
+      authDomain: "unreal-habit-tracker.firebaseapp.com",
+      projectId: "unreal-habit-tracker",
+      storageBucket: "unreal-habit-tracker.firebasestorage.app",
+      messagingSenderId: "371080969827",
+      appId: "1:371080969827:web:95bbdb41978665b5f28256",
+      measurementId: "G-VXLTQEBWEP"
+    };
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -1375,6 +1462,18 @@
       displayName: "",
       points: 0,
       lastDate: new Date().toDateString(),
+
+      // One entry per date:
+      // {
+      //   date: "2026-08-27",
+      //   completed: true,
+      //   completedCount: 4,
+      //   totalCount: 4
+      // }
+      completionHistory: [],
+
+      currentStreak: 0,
+      bestStreak: 0,
 
       habits: [
         { id: "move", icon: "🏃", name: "Move your body", reward: 25, complete: false },
@@ -1419,6 +1518,10 @@
 
     let rewardsEditMode = false;
     let selectedRewards = new Set();
+
+    // Leaderboard mode
+    let leaderboardMode = "daily";
+    let leaderboardUnsubscribe = null;
 
     // =========================
     // AUTH HANDLERS
@@ -1544,18 +1647,338 @@
       await db.collection("users").doc(currentUser.uid).set(state, { merge: true });
     }
 
+    // =========================
+    // DATE & STREAK FUNCTIONS
+    // =========================
+    function getLocalDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function dateFromLocalKey(dateKey) {
+      const [year, month, day] = dateKey.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function shiftDateKey(dateKey, amount) {
+      const date = dateFromLocalKey(dateKey);
+      date.setDate(date.getDate() + amount);
+      return getLocalDateKey(date);
+    }
+
+    function isPerfectDayForHabits(habits) {
+      return habits.length > 0 && habits.every(habit => habit.complete === true);
+    }
+
+    function getCompletionRecord(history, dateKey) {
+      return (history || []).find(record => record.date === dateKey);
+    }
+
+    function calculateStreaks(history) {
+      const records = new Map(
+        (history || []).map(record => [record.date, record])
+      );
+
+      const today = getLocalDateKey();
+      const yesterday = shiftDateKey(today, -1);
+
+      let currentStreak = 0;
+      let cursor = records.get(today)?.completed
+        ? today
+        : records.get(yesterday)?.completed
+          ? yesterday
+          : null;
+
+      while (cursor && records.get(cursor)?.completed === true) {
+        currentStreak++;
+        cursor = shiftDateKey(cursor, -1);
+      }
+
+      let bestStreak = 0;
+      let runningStreak = 0;
+      const completedDates = Array.from(records.keys())
+        .filter(date => records.get(date)?.completed)
+        .sort();
+
+      for (let i = 0; i < completedDates.length; i++) {
+        if (i === 0) {
+          runningStreak = 1;
+        } else {
+          const previous = completedDates[i - 1];
+          const current = completedDates[i];
+
+          runningStreak = shiftDateKey(previous, 1) === current
+            ? runningStreak + 1
+            : 1;
+        }
+
+        bestStreak = Math.max(bestStreak, runningStreak);
+      }
+
+      return { currentStreak, bestStreak };
+    }
+
+    function updateCompletionHistory() {
+      if (!Array.isArray(state.completionHistory)) {
+        state.completionHistory = [];
+      }
+
+      const date = getLocalDateKey();
+      const totalCount = state.habits.length;
+      const completedCount = state.habits.filter(habit => habit.complete).length;
+      const completed = isPerfectDayForHabits(state.habits);
+
+      const record = {
+        date,
+        completed,
+        completedCount,
+        totalCount
+      };
+
+      const existingIndex = state.completionHistory.findIndex(
+        item => item.date === date
+      );
+
+      if (existingIndex >= 0) {
+        state.completionHistory[existingIndex] = record;
+      } else {
+        state.completionHistory.push(record);
+      }
+
+      // Keep a reasonable amount of history in the user document.
+      state.completionHistory = state.completionHistory
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-400);
+
+      const streaks = calculateStreaks(state.completionHistory);
+      state.currentStreak = streaks.currentStreak;
+      state.bestStreak = Math.max(
+        Number(state.bestStreak) || 0,
+        streaks.bestStreak
+      );
+    }
+
+    function renderStreaks() {
+      const streaks = calculateStreaks(state.completionHistory || []);
+
+      state.currentStreak = streaks.currentStreak;
+      state.bestStreak = Math.max(
+        Number(state.bestStreak) || 0,
+        streaks.bestStreak
+      );
+
+      const currentElement = document.getElementById("currentStreakValue");
+      const bestElement = document.getElementById("bestStreakValue");
+      const statusElement = document.getElementById("streakStatus");
+
+      if (currentElement) {
+        currentElement.textContent = state.currentStreak;
+      }
+
+      if (bestElement) {
+        bestElement.textContent = state.bestStreak;
+      }
+
+      if (statusElement) {
+        if (state.currentStreak === 0) {
+          statusElement.textContent = "Complete every mission to start";
+        } else if (state.currentStreak === 1) {
+          statusElement.textContent = "Chain started";
+        } else {
+          statusElement.textContent = `${state.currentStreak} perfect days in a row`;
+        }
+      }
+    }
+
     function ensureDailyReset(current) {
       const today = new Date().toDateString();
+
       if (current.lastDate !== today) {
         if (Array.isArray(current.habits)) {
-          current.habits = current.habits.map(h => ({ ...h, complete: false }));
+          current.habits = current.habits.map(habit => ({
+            ...habit,
+            complete: false
+          }));
         }
+
         if (Array.isArray(current.badHabits)) {
-          current.badHabits = current.badHabits.map(b => ({ ...b, triggered: false }));
+          current.badHabits = current.badHabits.map(badHabit => ({
+            ...badHabit,
+            triggered: false
+          }));
         }
+
         current.lastDate = today;
+        updateCompletionHistory();
         saveUserData();
+      } else {
+        updateCompletionHistory();
       }
+    }
+        // =========================
+    // LEADERBOARD FUNCTIONS
+    // =========================
+    function setupRealtimeLeaderboard() {
+      if (leaderboardUnsubscribe) {
+        leaderboardUnsubscribe();
+      }
+
+      leaderboardUnsubscribe = db.collection("users")
+        .onSnapshot((snapshot) => {
+          const players = [];
+
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+
+            const history = Array.isArray(data.completionHistory)
+              ? data.completionHistory
+              : [];
+
+            const streaks = calculateStreaks(history);
+
+            players.push({
+              uid: doc.id,
+              name: data.displayName ||
+                data.email?.split("@")[0] ||
+                "User",
+              email: data.email || "",
+              avatar: "🧑‍🚀",
+              points: Math.max(0, Number(data.points) || 0),
+              completionHistory: history,
+              currentStreak: streaks.currentStreak,
+              bestStreak: Math.max(
+                Number(data.bestStreak) || 0,
+                streaks.bestStreak
+              )
+            });
+          });
+
+          renderLeaderboardFromSnapshot(players);
+        }, (error) => {
+          console.error("Leaderboard listener error:", error);
+          showToast("Could not load leaderboard.");
+        });
+    }
+
+    function getWeekStartKey(date = new Date()) {
+      const weekStart = new Date(date);
+      const day = weekStart.getDay(); // Sunday = 0
+      weekStart.setDate(weekStart.getDate() - day);
+      return getLocalDateKey(weekStart);
+    }
+
+    function getLeaderboardScore(player) {
+      const history = player.completionHistory || [];
+
+      if (leaderboardMode === "daily") {
+        const today = getLocalDateKey();
+        return history.some(record =>
+          record.date === today && record.completed === true
+        ) ? 1 : 0;
+      }
+
+      const weekStart = getWeekStartKey();
+      const today = getLocalDateKey();
+
+      return history.filter(record =>
+        record.date >= weekStart &&
+        record.date <= today &&
+        record.completed === true
+      ).length;
+    }
+
+    function getLeaderboardSubtitle(player, score) {
+      if (leaderboardMode === "daily") {
+        return score === 1
+          ? "Perfect day"
+          : "Still in progress";
+      }
+
+      return `${score} perfect day${score === 1 ? "" : "s"} this week`;
+    }
+
+    function renderLeaderboardFromSnapshot(players) {
+      const leaderboard = document.getElementById("leaderboard");
+      if (!leaderboard) return;
+
+      const periodLabel = document.getElementById("leaderboardPeriodLabel");
+      if (periodLabel) {
+        periodLabel.textContent =
+          leaderboardMode === "daily" ? "Today" : "This week";
+      }
+
+      const playerObj = currentUser
+        ? {
+            uid: currentUser.uid,
+            name: state.displayName ||
+              currentUser.email?.split("@")[0] ||
+              "You",
+            email: currentUser.email || "",
+            avatar: "🧑‍🚀",
+            points: Math.max(0, Number(state.points) || 0),
+            completionHistory: state.completionHistory || [],
+            currentStreak: state.currentStreak || 0,
+            bestStreak: state.bestStreak || 0
+          }
+        : null;
+
+      const existingUids = new Set(players.map(player => player.uid));
+
+      if (playerObj && !existingUids.has(playerObj.uid)) {
+        players.push(playerObj);
+      }
+
+      const rankedPlayers = players
+        .map(player => ({
+          ...player,
+          score: getLeaderboardScore(player)
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      if (!rankedPlayers.length) {
+        leaderboard.innerHTML = `
+          <div class="empty-card">
+            No leaderboard data yet.
+          </div>
+        `;
+        return;
+      }
+
+      leaderboard.innerHTML = rankedPlayers.map((member, index) => {
+        const level = getLevel(member.points);
+        const isYou = currentUser && member.uid === currentUser.uid;
+
+        return `
+          <div class="leader ${isYou ? "current-player" : ""}">
+            <div class="rank">
+              ${String(index + 1).padStart(2, "0")}
+            </div>
+
+            <div class="avatar">
+              ${escapeHtml(member.avatar)}
+            </div>
+
+            <div class="leader-info">
+              <div class="leader-name">
+                ${escapeHtml(member.name)}
+                ${isYou ? " <span>(you)</span>" : ""}
+              </div>
+
+              <div class="leader-sub">
+                Level ${level.level} ·
+                ${escapeHtml(getLeaderboardSubtitle(member, member.score))}
+              </div>
+            </div>
+
+            <div class="leader-points">
+              ${member.score}
+              ${leaderboardMode === "daily" ? "day" : "days"}
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     // =========================
@@ -1572,73 +1995,6 @@
       showToast("Username updated.");
       // Leaderboard updates in realtime automatically
     });
-
-    // =========================
-    // LEADERBOARD (REAL-TIME)
-    // =========================
-    function setupRealtimeLeaderboard() {
-      db.collection("users")
-        .orderBy("points", "desc")
-        .onSnapshot((snapshot) => {
-          const players = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            players.push({
-              uid: doc.id,
-              name: data.displayName || data.email?.split("@")[0] || "User",
-              email: data.email || "",
-              avatar: "🧑‍🚀",
-              points: Math.max(0, Number(data.points) || 0)
-            });
-          });
-
-          renderLeaderboardFromSnapshot(players);
-        });
-    }
-
-    function renderLeaderboardFromSnapshot(players) {
-      const leaderboard = document.getElementById("leaderboard");
-      if (!leaderboard) return;
-
-      const playerObj = currentUser
-        ? {
-            uid: currentUser.uid,
-            name: state.displayName || currentUser.email?.split("@")[0] || "You",
-            email: currentUser.email || "",
-            avatar: "🧑‍🚀",
-            points: Math.max(0, Number(state.points) || 0)
-          }
-        : null;
-
-      const existingUids = new Set(players.map(p => p.uid));
-      if (playerObj && !existingUids.has(playerObj.uid)) {
-        players.push(playerObj);
-      }
-
-      players.sort((a, b) => b.points - a.points);
-
-      leaderboard.innerHTML = players.map((member, index) => {
-        const level = getLevel(member.points);
-        const isYou = currentUser && member.uid === currentUser.uid;
-
-        return `
-          <div class="leader ${isYou ? "current-player" : ""}">
-            <div class="rank">${String(index + 1).padStart(2, "0")}</div>
-            <div class="avatar">${escapeHtml(member.avatar)}</div>
-            <div class="leader-info">
-              <div class="leader-name">
-                ${escapeHtml(member.name)}
-                ${isYou ? " <span>(you)</span>" : ""}
-              </div>
-              <div class="leader-sub">
-                Level ${level.level} · ${escapeHtml(level.title)}
-              </div>
-            </div>
-            <div class="leader-points">${member.points} XP</div>
-          </div>
-        `;
-      }).join("");
-    }
 
     // =========================
     // RENDER FUNCTIONS
@@ -1722,6 +2078,7 @@
       state.points = Math.max(0, state.points + requestedChange);
       const actualChange = state.points - oldPoints;
 
+      updateCompletionHistory();
       saveUserData();
       renderAll();
 
@@ -1756,13 +2113,10 @@
       selectedHabits.clear();
       habitsEditMode = false;
 
+      updateCompletionHistory();
       saveUserData();
       renderAll();
       showToast("Selected goals removed.");
-    }
-
-    function renderLeaderboard() {
-      // Handled by realtime listener.
     }
 
     function renderRewards() {
@@ -1959,6 +2313,7 @@
         document.getElementById(idField).value = idField === "newHabitReward" ? "20" : "";
       });
 
+      updateCompletionHistory();
       saveUserData();
       renderAll();
       showToast(`Goal added: ${name} · +${reward} XP on complete`);
@@ -2304,6 +2659,7 @@
 
     function renderAll() {
       renderDashboard();
+      renderStreaks();
       renderRewards();
       renderBadHabits();
       renderExercises();
@@ -2312,6 +2668,9 @@
       updateEditBars();
     }
 
+    // =========================
+    // EVENT LISTENERS
+    // =========================
     document.querySelectorAll(".nav-button").forEach(button => {
       button.addEventListener("click", () => {
         switchView(button.dataset.view, button);
@@ -2362,11 +2721,11 @@
 
     document.getElementById("addWater")
       .addEventListener("click", () => {
-      state.nutrition.water++;
-      saveUserData();
-      renderNutrition();
-      showToast("Water logged.");
-    });
+        state.nutrition.water++;
+        saveUserData();
+        renderNutrition();
+        showToast("Water logged.");
+      });
 
     document.getElementById("addFood")
       .addEventListener("click", addFood);
@@ -2416,101 +2775,134 @@
         closeTransactionModal();
       }
     });
-   // ========== DAILY REMINDER (selectable time) ==========
-function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
 
-function getStoredTime() {
-  return localStorage.getItem('reminderTime') || '07:00';
-}
+    // ========== LEADERBOARD TABS (DAILY / WEEKLY) ==========
+    document.getElementById("dailyLeaderboardTab")
+      .addEventListener("click", () => {
+        leaderboardMode = "daily";
 
-function parseTimeToNextDate(timeStr) {
-  const [hh, mm] = timeStr.split(':').map(Number);
-  const now = new Date();
-  const next = new Date();
-  next.setHours(hh, mm, 0, 0);
-  if (next <= now) {
-    next.setDate(next.getDate() + 1);
-  }
-  return next;
-}
+        document.getElementById("dailyLeaderboardTab")
+          .classList.add("active");
 
-function scheduleDailyReminder() {
-  if (!('Notification' in window)) {
-    document.getElementById('reminderStatus').textContent =
-      'Notifications not supported in this browser.';
-    return;
-  }
+        document.getElementById("weeklyLeaderboardTab")
+          .classList.remove("active");
 
-  const timeStr = getStoredTime();
-  const next = parseTimeToNextDate(timeStr);
+        if (currentUser) {
+          setupRealtimeLeaderboard();
+        }
+      });
 
-  if (Notification.permission === 'granted') {
-    const now = new Date();
-    const delay = next.getTime() - now.getTime();
+    document.getElementById("weeklyLeaderboardTab")
+      .addEventListener("click", () => {
+        leaderboardMode = "weekly";
 
-    localStorage.setItem('nextReminderTime', next.toISOString());
+        document.getElementById("weeklyLeaderboardTab")
+          .classList.add("active");
 
-    if (window.nextReminderTimeout) {
-      clearTimeout(window.nextReminderTimeout);
+        document.getElementById("dailyLeaderboardTab")
+          .classList.remove("active");
+
+        if (currentUser) {
+          setupRealtimeLeaderboard();
+        }
+      });
+
+    // ========== DAILY REMINDER (selectable time) ==========
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    window.nextReminderTimeout = setTimeout(() => {
-      new Notification('Unreal Habit Tracker', {
-        body: 'Time to check your habits and log today.',
-        tag: 'daily-habit-reminder'
-      });
-      scheduleDailyReminder();
-    }, delay);
+    function getStoredTime() {
+      return localStorage.getItem('reminderTime') || '07:00';
+    }
 
-    document.getElementById('reminderStatus').textContent =
-      'Reminder enabled for ' + formatTime(next) + ' daily.';
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        scheduleDailyReminder();
+    function parseTimeToNextDate(timeStr) {
+      const [hh, mm] = timeStr.split(':').map(Number);
+      const now = new Date();
+      const next = new Date();
+      next.setHours(hh, mm, 0, 0);
+      if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      return next;
+    }
+
+    function scheduleDailyReminder() {
+      if (!('Notification' in window)) {
+        document.getElementById('reminderStatus').textContent =
+          'Notifications not supported in this browser.';
+        return;
+      }
+
+      const timeStr = getStoredTime();
+      const next = parseTimeToNextDate(timeStr);
+
+      if (Notification.permission === 'granted') {
+        const now = new Date();
+        const delay = next.getTime() - now.getTime();
+
+        localStorage.setItem('nextReminderTime', next.toISOString());
+
+        if (window.nextReminderTimeout) {
+          clearTimeout(window.nextReminderTimeout);
+        }
+
+        window.nextReminderTimeout = setTimeout(() => {
+          new Notification('Unreal Habit Tracker', {
+            body: 'Time to check your habits and log today.',
+            tag: 'daily-habit-reminder'
+          });
+          scheduleDailyReminder();
+        }, delay);
+
+        document.getElementById('reminderStatus').textContent =
+          'Reminder enabled for ' + formatTime(next) + ' daily.';
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            scheduleDailyReminder();
+          } else {
+            document.getElementById('reminderStatus').textContent =
+              'Notifications denied. You can enable them in Safari settings.';
+          }
+        });
       } else {
         document.getElementById('reminderStatus').textContent =
-          'Notifications denied. You can enable them in Safari settings.';
+          'Notifications denied. Enable them in Safari settings > Notifications.';
       }
-    });
-  } else {
-    document.getElementById('reminderStatus').textContent =
-      'Notifications denied. Enable them in Safari settings > Notifications.';
-  }
-}
-
-document.getElementById('setReminderBtn')?.addEventListener('click', () => {
-  const timeInput = document.getElementById('reminderTimeInput');
-  const timeStr = timeInput.value;
-  if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) {
-    document.getElementById('reminderStatus').textContent =
-      'Please pick a valid time.';
-    return;
-  }
-  localStorage.setItem('reminderTime', timeStr);
-  scheduleDailyReminder();
-});
-
-// On load: set time input from stored value and show status
-if ('Notification' in window) {
-  const storedTime = getStoredTime();
-  const timeInput = document.getElementById('reminderTimeInput');
-  if (timeInput) {
-    timeInput.value = storedTime;
-  }
-
-  if (Notification.permission === 'granted') {
-    const stored = localStorage.getItem('nextReminderTime');
-    if (stored) {
-      const next = new Date(stored);
-      document.getElementById('reminderStatus').textContent =
-        'Reminder enabled for ' + formatTime(next) + ' daily.';
     }
-    scheduleDailyReminder();
-  }
-}
+
+    document.getElementById('setReminderBtn')?.addEventListener('click', () => {
+      const timeInput = document.getElementById('reminderTimeInput');
+      const timeStr = timeInput.value;
+      if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) {
+        document.getElementById('reminderStatus').textContent =
+          'Please pick a valid time.';
+        return;
+      }
+      localStorage.setItem('reminderTime', timeStr);
+      scheduleDailyReminder();
+    });
+
+    // On load: set time input from stored value and show status
+    if ('Notification' in window) {
+      const storedTime = getStoredTime();
+      const timeInput = document.getElementById('reminderTimeInput');
+      if (timeInput) {
+        timeInput.value = storedTime;
+      }
+
+      if (Notification.permission === 'granted') {
+        const stored = localStorage.getItem('nextReminderTime');
+        if (stored) {
+          const next = new Date(stored);
+          document.getElementById('reminderStatus').textContent =
+            'Reminder enabled for ' + formatTime(next) + ' daily.';
+        }
+        scheduleDailyReminder();
+      }
+    }
+
   </script>
 </body>
 </html>
