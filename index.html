@@ -1670,7 +1670,7 @@
       const completed = state.habits.filter(habit => habit.complete).length;
 
       document.getElementById("currentDate").textContent = formatDate();
-      document.getElementById("levelNumber").textContent = String(level.level).padStart(2, "0");
+      document.getElementById("levelNumber").textContent = String(level.level);
       document.getElementById("pointsValue").textContent = state.points;
       document.getElementById("nextLevelPoints").textContent = level.next;
       document.getElementById("levelTitle").textContent = level.title;
