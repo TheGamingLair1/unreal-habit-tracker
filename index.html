@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#08090d" />
+  <title>UNREAL HABIT TRACKER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- PWA / home screen icon -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Unreal Habit Tracker">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/your-icon-file.png">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/your-icon-file.png">
+
+  <style>
+    :root {
+      --bg: #08090d;
+      --bg-2: #101218;
+      --card: rgba(255, 255, 255, 0.075);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --line: rgba(255, 255, 255, 0.13);
+      --text: #f7f7fb;
+      --muted: #9296a6;
+      --faint: #5d6170;
+      --blue: #7c9cff;
+      --cyan: #61e7ff;
+      --purple: #bd88ff;
+      --green: #6de6a0;
+      --orange: #ffb86b;
+      --red: #ff6d85;
+      --radius: 26px;
+      --nav-height: 78px;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html {
+      background: var(--bg);
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(111, 133, 255, .18), transparent 30rem),
+        radial-gradient(circle at 100% 25%, rgba(175, 92, 255, .13), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding-bottom: calc(var(--nav-height) + 26px + env(safe-area-inset-bottom));
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+      color: inherit;
+    }
+    .app {
+      width: min(100%, 760px);
+      margin: auto;
+      padding: 22px 17px 0;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+    h1 {
+      margin-top: 5px;
+      font-size: clamp(25px, 7vw, 38px);
+      line-height: .95;
+      letter-spacing: -.07em;
+    }
+    h2 {
+      font-size: 20px;
+      letter-spacing: -.04em;
+    }
+    h3 {
+      font-size: 15px;
+      letter-spacing: -.02em;
+    }
+    .date {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .glass {
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.035)),
+        var(--card);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        0 18px 50px rgba(0,0,0,.2);
+      backdrop-filter: blur(24px) saturate(130%);
+      -webkit-backdrop-filter: blur(24px) saturate(130%);
+    }
+    .icon-button,
+    .primary-button,
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 16px;
+      transition: transform .18s ease, filter .18s ease, background .18s ease;
+    }
+    .icon-button:active,
+    .primary-button:active,
+    .secondary-button:active,
+    .habit-card:active,
+    .reward-card:active,
+    .bad-card:active {
+      transform: scale(.97);
+    }
+    .icon-button {
+      width: 45px;
+      height: 45px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font-size: 20px;
+    }
+    .primary-button {
+      min-height: 46px;
+      padding: 0 17px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(124,156,255,.2);
+    }
+    .secondary-button {
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .section {
+      margin-top: 25px;
+    }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-heading span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .hero {
+      padding: 20px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+    .hero::after {
+      content: "⚡";
+      position: absolute;
+      right: 18px;
+      top: -5px;
+      color: rgba(255,255,255,0.06);
+      font-size: 110px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+    .hero-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .level-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .level-number {
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -.1em;
+      line-height: .9;
+    }
+    .xp-copy {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+    .progress {
+      height: 9px;
+      margin-top: 19px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(255,255,255,.1);
+    }
+    .progress > div {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      transition: width .45s ease;
+    }
+    .habit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+    .habit-card {
+      min-height: 145px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--card);
+      text-align: left;
+      transition: transform .18s ease, border-color .2s ease, background .2s ease;
+      position: relative;
+    }
+    .habit-card.complete {
+      border-color: rgba(109,230,160,.65);
+      background: linear-gradient(145deg, rgba(109,230,160,.18), rgba(255,255,255,.045));
+    }
+    .habit-card.selectable.selecting {
+      border-color: var(--orange);
+      background: rgba(255,184,107,.12);
+    }
+    .habit-card.selectable.selected {
+      border-color: var(--red);
+      background: rgba(255,109,133,.16);
+    }
+    .habit-icon {
+      display: grid;
+      place-items: center;
+      width: 39px;
+      height: 39px;
+      margin-bottom: 19px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.1);
+      font-size: 20px;
+    }
+    .habit-card.complete .habit-icon {
+      background: rgba(109,230,160,.2);
+    }
+    .habit-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .habit-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .reward {
+      color: var(--cyan);
+    }
+    .leaderboard {
+      padding: 7px 17px;
+      border-radius: var(--radius);
+    }
+    .leader {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .leader:last-child {
+      border-bottom: 0;
+    }
+    .rank {
+      width: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 37px;
+      height: 37px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, rgba(124,156,255,.55), rgba(189,136,255,.45));
+      font-size: 18px;
+    }
+    .leader-info {
+      flex: 1;
+    }
+    .leader-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .leader-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .leader-points {
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .leader.current-player {
+      margin: 0 -8px;
+      padding-right: 8px;
+      padding-left: 8px;
+      border-radius: 15px;
+      background: rgba(97, 231, 255, .08);
+    }
+    .leader-name span {
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .workout-card,
+    .nutrition-card,
+    .empty-card,
+    .rewards-card,
+    .bad-card {
+      padding: 18px;
+      border-radius: var(--radius);
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 17px;
+    }
+    .card-description {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .exercise-row {
+      display: grid;
+      grid-template-columns: 1fr 58px 58px 42px;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .exercise-row input,
+    .field input,
+    .field select {
+      width: 100%;
+      height: 41px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .exercise-row input:focus,
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--blue);
+    }
+    .exercise-label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .remove-exercise {
+      height: 41px;
+      border-radius: 12px;
+      background: rgba(255,109,133,.12);
+      color: var(--red);
+    }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 15px;
+    }
+    .timer {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 13px 14px;
+      border: 1px solid rgba(97,231,255,.3);
+      border-radius: 16px;
+      background: rgba(97,231,255,.08);
+    }
+    .timer.active {
+      display: flex;
+    }
+    .timer-time {
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.05em;
+    }
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 17px 0;
+    }
+    .macro {
+      padding: 13px 10px;
+      border-radius: 17px;
+      background: rgba(255,255,255,.065);
+      text-align: center;
+    }
+    .macro-value {
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .macro-label {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .food-log {
+      margin-top: 16px;
+    }
+    .food-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .food-item:last-child {
+      border-bottom: 0;
+    }
+    .food-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .food-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .food-calories {
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .empty-card {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+    .view {
+      display: none;
+    }
+    .view.active {
+      display: block;
+      animation: appear .25s ease;
+    }
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .bottom-nav {
+      position: fixed;
+      z-index: 20;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      left: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: min(calc(100% - 24px), 560px);
+      height: var(--nav-height);
+      margin: auto;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 27px;
+      background: rgba(28,30,40,.72);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(25px) saturate(150%);
+      -webkit-backdrop-filter: blur(25px) saturate(150%);
+    }
+    .nav-button {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 20px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .nav-button span:first-child {
+      font-size: 21px;
+      line-height: 1;
+    }
+    .nav-button.active {
+      color: white;
+      background: rgba(255,255,255,.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .modal-backdrop {
+      position: fixed;
+      z-index: 50;
+      inset: 0;
+      display: none;
+      align-items: end;
+      justify-content: center;
+      padding: 15px;
+      background: rgba(0,0,0,.62);
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal {
+      width: min(100%, 500px);
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: 29px;
+      background:
+        linear-gradient(145deg, rgba(40,43,58,.94), rgba(15,16,23,.97));
+      box-shadow: 0 25px 90px rgba(0,0,0,.6);
+      animation: modal-in .25s ease;
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-icon {
+      display: grid;
+      place-items: center;
+      width: 47px;
+      height: 47px;
+      margin-bottom: 10px;
+      border-radius: 16px;
+      background: rgba(255,184,107,.15);
+      color: var(--orange);
+      font-size: 24px;
+    }
+    .modal-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 5px;
+    }
+    .transaction-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .add-points {
+      background: rgba(109,230,160,.16);
+      color: var(--green);
+      border: 1px solid rgba(109,230,160,.25);
+    }
+    .deduct-points {
+      background: rgba(255,109,133,.14);
+      color: var(--red);
+      border: 1px solid rgba(255,109,133,.25);
+    }
+    .toast {
+      position: fixed;
+      z-index: 100;
+      right: 18px;
+      bottom: calc(var(--nav-height) + 28px + env(safe-area-inset-bottom));
+      left: 18px;
+      display: none;
+      max-width: 430px;
+      margin: auto;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(34,36,49,.94);
+      color: white;
+      font-size: 13px;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(0,0,0,.35);
+    }
+    .toast.show {
+      display: block;
+      animation: toast-in .25s ease;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Rewards & custom goals */
+    .rewards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 11px;
+    }
+    .reward-card {
+      min-height: 120px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      text-align: left;
+      transition: transform .18s ease, border-color .2s ease, background .2s ease;
+      position: relative;
+    }
+    .reward-card.selectable.selecting {
+      border-color: var(--orange);
+      background: rgba(255,184,107,.12);
+    }
+    .reward-card.selectable.selected {
+      border-color: var(--red);
+      background: rgba(255,109,133,.16);
+    }
+    .reward-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.1);
+      font-size: 18px;
+    }
+    .reward-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .reward-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .reward-cost {
+      color: var(--orange);
+    }
+    .add-habit-row,
+    .add-reward-row,
+    .add-bad-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.6fr 0.6fr 42px;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .add-habit-row input,
+    .add-reward-row input,
+    .add-bad-row input {
+      width: 100%;
+      height: 41px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .remove-item {
+      height: 41px;
+      border-radius: 12px;
+      background: rgba(255,109,133,.12);
+      color: var(--red);
+    }
+    .bad-habits-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 11px;
+    }
+    .bad-card {
+      min-height: 120px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      text-align: left;
+      transition: transform .18s ease, border-color .2s ease, background .2s ease;
+      position: relative;
+    }
+    .bad-card.triggered {
+      border-color: rgba(255,109,133,.65);
+      background: linear-gradient(145deg, rgba(255,109,133,.18), rgba(255,255,255,.045));
+    }
+    .bad-card.selectable.selecting {
+      border-color: var(--orange);
+      background: rgba(255,184,107,.12);
+    }
+    .bad-card.selectable.selected {
+      border-color: var(--red);
+      background: rgba(255,109,133,.16);
+    }
+    .bad-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.1);
+      font-size: 18px;
+    }
+    .bad-card.triggered .bad-icon {
+      background: rgba(255,109,133,.2);
+    }
+    .bad-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .bad-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .bad-penalty {
+      color: var(--red);
+    }
+    .edit-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+    }
+    .edit-bar-copy {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .edit-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Auth view */
+    .auth-view {
+      display: none;
+      padding-top: 40px;
+    }
+    .auth-view.active {
+      display: block;
+    }
+    .auth-card {
+      padding: 22px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.035)),
+        var(--card);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        0 18px 50px rgba(0,0,0,.2);
+      backdrop-filter: blur(24px) saturate(130%);
+      -webkit-backdrop-filter: blur(24px) saturate(130%);
+      max-width: 420px;
+      margin: 20px auto 0;
+    }
+    .auth-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .auth-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+    .auth-field {
+      margin-bottom: 12px;
+    }
+    .auth-field label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    .auth-field input {
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.2);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .auth-field input:focus {
+      border-color: var(--blue);
+    }
+    .auth-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      margin: 10px 0 6px;
+    }
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .social-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .logout-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+    }
+    .logout-copy {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* Edit profile */
+    .profile-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+    }
+    .profile-copy {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .profile-input {
+      flex: 1;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      outline: none;
+    }
+    .profile-input:focus {
+      border-color: var(--blue);
+    }
+
+    @media (min-width: 620px) {
+      .modal-backdrop {
+        align-items: center;
+      }
+    }
+    @media (max-width: 390px) {
+      .exercise-row {
+        grid-template-columns: 1fr 53px 53px 38px;
+      }
+      .habit-card {
+        min-height: 137px;
+      }
+      .add-habit-row,
+      .add-reward-row,
+      .add-bad-row {
+        grid-template-columns: 1fr 0.7fr 0.7fr 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- AUTH VIEW -->
+  <main class="app auth-view" id="authView">
+    <div class="eyebrow" style="text-align:center">Personal evolution system</div>
+    <h1 style="text-align:center; margin-top:6px">UNREAL<br>HABIT TRACKER</h1>
+
+    <div class="auth-card glass">
+      <div class="auth-title">Sign in</div>
+      <div class="auth-subtitle">Track habits, earn XP, compete with friends.</div>
+
+      <div class="auth-field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="auth-field">
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" placeholder="Your password" />
+      </div>
+
+      <div class="auth-actions">
+        <button class="primary-button" id="authEmailPassword">Continue with email</button>
+        <div class="divider">or</div>
+        <div class="social-buttons">
+          <button class="social-button" id="authGoogle">
+            <span>G</span> Google
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- APP VIEW (shown when logged in) -->
+  <main class="app" id="appView" style="display:none">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Personal evolution system</div>
+        <h1>UNREAL<br>HABIT TRACKER</h1>
+        <div class="date" id="currentDate"></div>
+      </div>
+      <button class="icon-button glass" id="transactionOpen" aria-label="Open point transaction hub">
+        ⚡
+      </button>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="dashboardView">
+      <div class="hero glass">
+        <div class="hero-row">
+          <div>
+            <div class="level-label">CURRENT CHARACTER LEVEL</div>
+            <div class="level-number" id="levelNumber">01</div>
+          </div>
+          <div class="xp-copy">
+            <span id="pointsValue">0</span> / <span id="nextLevelPoints">100</span> XP<br>
+            <span id="levelTitle">Initiate</span>
+          </div>
+        </div>
+        <div class="progress">
+          <div id="xpProgress"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">
+          <h2>Today's missions</h2>
+          <span id="habitProgressLabel">0/0 complete</span>
+        </div>
+        <div class="habit-grid" id="habitGrid"></div>
+
+        <div class="section-heading" style="margin-top:18px">
+          <h2>Add custom goal</h2>
+          <span>Personal mission</span>
+        </div>
+        <div class="nutrition-card glass">
+          <div class="add-habit-row">
+            <input id="newHabitName" type="text" placeholder="Goal name (e.g., No swearing)" />
+            <input id="newHabitReward" type="number" min="1" placeholder="XP" value="20" />
+            <input id="newHabitIcon" type="text" placeholder="Icon" value="🚫" />
+            <button class="remove-item" id="addHabitBtn">＋</button>
+          </div>
+          <p class="card-description">
+            Create your own daily goals. Each time you complete one, you earn XP. Tap again to undo.
+          </p>
+        </div>
+
+        <div class="edit-bar">
+          <div class="edit-bar-copy">
+            Manage goals
+          </div>
+          <div class="edit-buttons">
+            <button class="secondary-button" id="toggleHabitsEdit">Select to remove</button>
+            <button class="secondary-button" id="removeSelectedHabits" style="display:none">Remove selected</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">
+          <h2>Bad habits tracker</h2>
+          <span>Penalties</span>
+        </div>
+        <div class="bad-card glass" style="margin-bottom:11px">
+          <div class="card-top">
+            <div>
+              <h3>Log slip-ups</h3>
+              <p class="card-description">
+                Tap a bad habit when it happens. XP is deducted each time.
+              </p>
+            </div>
+            <span>⚠️</span>
+          </div>
+          <div class="add-bad-row">
+            <input id="newBadName" type="text" placeholder="Bad habit (e.g., Swearing)" />
+            <input id="newBadPenalty" type="number" min="1" placeholder="XP" value="15" />
+            <input id="newBadIcon" type="text" placeholder="Icon" value="🤬" />
+            <button class="remove-item" id="addBadBtn">＋</button>
+          </div>
+          <div class="bad-habits-grid" id="badHabitsGrid"></div>
+        </div>
+
+        <div class="edit-bar">
+          <div class="edit-bar-copy">
+            Manage bad habits
+          </div>
+          <div class="edit-buttons">
+            <button class="secondary-button" id="toggleBadEdit">Select to remove</button>
+            <button class="secondary-button" id="removeSelectedBad" style="display:none">Remove selected</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">
+          <h2>Squad leaderboard</h2>
+          <span>Live ranking</span>
+        </div>
+        <div class="leaderboard glass" id="leaderboard"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">
+          <h2>Rewards shop</h2>
+          <span>Spend XP</span>
+        </div>
+        <div class="rewards-card glass">
+          <div class="card-top">
+            <div>
+              <h3>Redeem your progress</h3>
+              <p class="card-description">
+                Buy small rewards when you hit milestones.
+              </p>
+            </div>
+            <span>🎁</span>
+          </div>
+
+          <div class="section-heading" style="margin-top:8px">
+            <h2>Add custom reward</h2>
+            <span>New prize</span>
+          </div>
+          <div class="add-reward-row">
+            <input id="newRewardName" type="text" placeholder="Reward (e.g., 30 min gaming)" />
+            <input id="newRewardCost" type="number" min="1" placeholder="XP cost" value="150" />
+            <input id="newRewardIcon" type="text" placeholder="Icon" value="🎮" />
+            <button class="remove-item" id="addRewardBtn">＋</button>
+          </div>
+
+          <div class="rewards-grid" id="rewardsGrid"></div>
+
+          <div class="edit-bar">
+            <div class="edit-bar-copy">
+              Manage rewards
+            </div>
+            <div class="edit-buttons">
+              <button class="secondary-button" id="toggleRewardsEdit">Select to remove</button>
+              <button class="secondary-button" id="removeSelectedRewards" style="display:none">Remove selected</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit profile -->
+      <div class="profile-bar">
+        <div class="profile-copy">
+          Username (shown on leaderboard)
+        </div>
+        <input
+          id="profileUsername"
+          class="profile-input"
+          type="text"
+          placeholder="Your username"
+        />
+        <button class="secondary-button" id="saveProfileBtn">Save</button>
+      </div>
+
+      <div class="logout-bar">
+        <div class="logout-copy">
+          Signed in as <span id="userEmailDisplay" style="color:var(--text)"></span>
+        </div>
+        <button class="secondary-button" id="logoutBtn">Log out</button>
+      </div>
+    </section>
+
+    <!-- WORKOUT -->
+    <section class="view" id="workoutView">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Training module</div>
+          <h2>Iron Matrix</h2>
+        </div>
+        <span id="workoutCount">0 sessions</span>
+      </div>
+      <div class="workout-card glass">
+        <div class="card-top">
+          <div>
+            <h3>Log today's session</h3>
+            <p class="card-description">
+              Record your work, then use the rest timer between sets.
+            </p>
+          </div>
+          <span>🏋️</span>
+        </div>
+        <div id="exerciseList"></div>
+        <div class="button-row">
+          <button class="secondary-button" id="addExercise">＋ Exercise</button>
+          <button class="primary-button" id="saveWorkout">Save workout</button>
+        </div>
+        <div class="timer" id="restTimer">
+          <div>
+            <div class="eyebrow">Rest protocol</div>
+            <div class="timer-time" id="timerDisplay">01:30</div>
+          </div>
+          <div class="button-row" style="margin-top:0">
+            <button class="secondary-button" id="addThirty">+30 sec</button>
+            <button class="secondary-button" id="stopTimer">Stop</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-heading">
+          <h2>Session history</h2>
+        </div>
+        <div id="workoutHistory"></div>
+      </div>
+    </section>
+
+    <!-- NUTRITION -->
+    <section class="view" id="nutritionView">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Fuel module</div>
+          <h2>Macro logger</h2>
+        </div>
+        <span>Today</span>
+      </div>
+      <div class="nutrition-card glass">
+        <div class="card-top">
+          <div>
+            <h3>Daily targets</h3>
+            <p class="card-description">Adjust these targets to fit your current objective.</p>
+          </div>
+          <span>🗓</span>
+        </div>
+        <div class="macro-grid">
+          <div class="macro">
+            <div class="macro-value" id="proteinTotal">0g</div>
+            <div class="macro-label">PROTEIN</div>
+          </div>
+          <div class="macro">
+            <div class="macro-value" id="calorieTotal">0</div>
+            <div class="macro-label">CALORIES</div>
+          </div>
+          <div class="macro">
+            <div class="macro-value" id="waterTotal">0</div>
+            <div class="macro-label">WATER / GLASSES</div>
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="proteinTarget">Protein target (g)</label>
+            <input id="proteinTarget" type="number" min="0" value="140">
+          </div>
+          <div class="field">
+            <label for="calorieTarget">Calorie target</label>
+            <input id="calorieTarget" type="number" min="0" value="2200">
+          </div>
+        </div>
+        <div class="button-row">
+          <button class="primary-button" id="saveTargets">Save targets</button>
+          <button class="secondary-button" id="addWater">＋ Water</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">
+          <h2>Add food</h2>
+          <span>Manual entry</span>
+        </div>
+        <div class="nutrition-card glass">
+          <div class="field-grid">
+            <div class="field">
+              <label for="foodName">Food or meal</label>
+              <input id="foodName" type="text" placeholder="Chicken bowl">
+            </div>
+            <div class="field">
+              <label for="foodCalories">Calories</label>
+              <input id="foodCalories" type="number" min="0" placeholder="520">
+            </div>
+            <div class="field">
+              <label for="foodProtein">Protein (g)</label>
+              <input id="foodProtein" type="number" min="0" placeholder="38">
+            </div>
+            <div class="field">
+              <label for="foodCarbs">Carbs (g)</label>
+              <input id="foodCarbs" type="number" min="0" placeholder="50">
+            </div>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" id="addFood">Add meal</button>
+          </div>
+          <div class="food-log" id="foodLog"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main navigation" id="bottomNav" style="display:none">
+    <button class="nav-button active" data-view="dashboardView">
+      <span>🗉</span>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-button" data-view="workoutView">
+      <span>♜</span>
+      <span>Workout</span>
+    </button>
+    <button class="nav-button" data-view="nutritionView">
+      <span>◈</span>
+      <span>Nutrition</span>
+    </button>
+  </nav>
+
+  <!-- POINT TRANSACTION HUB -->
+  <div class="modal-backdrop" id="transactionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-icon">⚡</div>
+          <h2>Point Transaction Hub</h2>
+          <p class="modal-copy">
+            Reward progress or record a penalty (e.g., slipped up, swore, etc.). Character levels update automatically.
+          </p>
+        </div>
+        <button class="icon-button" id="transactionClose" aria-label="Close">×</button>
+      </div>
+      <div class="field">
+        <label for="transactionAmount">Point amount</label>
+        <input id="transactionAmount" type="number" min="1" value="25">
+      </div>
+      <div class="field" style="margin-top:11px">
+        <label for="transactionReason">Reason</label>
+        <input id="transactionReason" type="text" placeholder="Completed a difficult task / Slipped up">
+      </div>
+      <div class="transaction-buttons">
+        <button class="secondary-button add-points" id="addPoints">＋ Add points</button>
+        <button class="secondary-button deduct-points" id="deductPoints">− Deduct points</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // =========================
+    // PASTE YOUR FIREBASE CONFIG HERE
+    // =========================
+    const firebaseConfig = {
+  apiKey: "AIzaSyDvwk5pab07snh55VfTrjAAbS46uj2yHIw",
+  authDomain: "unreal-habit-tracker.firebaseapp.com",
+  projectId: "unreal-habit-tracker",
+  storageBucket: "unreal-habit-tracker.firebasestorage.app",
+  messagingSenderId: "371080969827",
+  appId: "1:371080969827:web:95bbdb41978665b5f28256",
+  measurementId: "G-VXLTQEBWEP"
+};
+
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // =========================
+    // APP STATE
+    // =========================
+    const defaultUserData = {
+      displayName: "",
+      points: 0,
+      lastDate: new Date().toDateString(),
+
+      habits: [
+        { id: "move", icon: "🏃", name: "Move your body", reward: 25, complete: false },
+        { id: "focus", icon: "🎯", name: "Deep focus block", reward: 20, complete: false },
+        { id: "water", icon: "💧", name: "Hydration check", reward: 15, complete: false },
+        { id: "reflect", icon: "🌙", name: "Evening reflection", reward: 20, complete: false }
+      ],
+
+      badHabits: [
+        { id: "b1", icon: "🤬", name: "Swearing", penalty: 15, triggered: false }
+      ],
+
+      rewards: [
+        { id: "r1", icon: "🎮", name: "30 min gaming", cost: 150 },
+        { id: "r2", icon: "🍕", name: "Cheat meal", cost: 250 },
+        { id: "r3", icon: "🎬", name: "Movie night", cost: 300 }
+      ],
+
+      workouts: [],
+      exercises: [
+        { name: "Exercise name", sets: "", reps: "", weight: "" }
+      ],
+      nutrition: {
+        proteinTarget: 140,
+        calorieTarget: 2200,
+        water: 0,
+        foods: []
+      }
+    };
+
+    let state = structuredClone(defaultUserData);
+    let currentUser = null;
+    let timerSeconds = 90;
+    let timerInterval = null;
+
+    // Selection mode flags
+    let habitsEditMode = false;
+    let selectedHabits = new Set();
+
+    let badEditMode = false;
+    let selectedBad = new Set();
+
+    let rewardsEditMode = false;
+    let selectedRewards = new Set();
+
+    // =========================
+    // AUTH HANDLERS
+    // =========================
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("authView").classList.remove("active");
+        document.getElementById("appView").style.display = "block";
+        document.getElementById("bottomNav").style.display = "grid";
+        document.getElementById("userEmailDisplay").textContent = user.email || user.uid;
+
+        await loadUserData(user.uid);
+        ensureDailyReset(state);
+
+        if (!state.displayName) {
+          const name = prompt("Choose a username (shown on leaderboard):");
+          if (name && name.trim()) {
+            state.displayName = name.trim();
+            await saveUserData();
+          }
+        }
+
+        // Fill profile input
+        document.getElementById("profileUsername").value = state.displayName || "";
+
+        renderAll();
+        setupRealtimeLeaderboard();
+      } else {
+        document.getElementById("authView").classList.add("active");
+        document.getElementById("appView").style.display = "none";
+        document.getElementById("bottomNav").style.display = "none";
+        currentUser = null;
+        state = structuredClone(defaultUserData);
+      }
+    });
+
+    document.getElementById("authEmailPassword").addEventListener("click", async () => {
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+
+      if (!email || !password) {
+        showToast("Enter email and password.");
+        return;
+      }
+
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (err) {
+        if (err.code === "auth/user-not-found" || err.code === "auth/invalid-email") {
+          await auth.createUserWithEmailAndPassword(email, password);
+          const user = auth.currentUser;
+          await db.collection("users").doc(user.uid).set({
+            email: user.email,
+            ...defaultUserData,
+            lastDate: new Date().toDateString()
+          });
+        } else {
+          showToast("Email/password error: " + err.message);
+        }
+      }
+    });
+
+    document.getElementById("authGoogle").addEventListener("click", async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await auth.signInWithPopup(provider);
+        const user = auth.currentUser;
+        const doc = await db.collection("users").doc(user.uid).get();
+        if (!doc.exists) {
+          await db.collection("users").doc(user.uid).set({
+            email: user.email,
+            ...defaultUserData,
+            lastDate: new Date().toDateString()
+          });
+        }
+      } catch (err) {
+        showToast("Google sign-in error: " + err.message);
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await auth.signOut();
+      } catch (err) {
+        showToast("Logout error: " + err.message);
+      }
+    });
+
+    // =========================
+    // DATA LOAD / SAVE
+    // =========================
+    async function loadUserData(uid) {
+      const doc = await db.collection("users").doc(uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        state = {
+          ...structuredClone(defaultUserData),
+          ...data,
+          nutrition: {
+            ...structuredClone(defaultUserData.nutrition),
+            ...(data.nutrition || {})
+          },
+          habits: Array.isArray(data.habits) ? data.habits : structuredClone(defaultUserData.habits),
+          badHabits: Array.isArray(data.badHabits) ? data.badHabits : structuredClone(defaultUserData.badHabits),
+          rewards: Array.isArray(data.rewards) ? data.rewards : structuredClone(defaultUserData.rewards),
+          workouts: Array.isArray(data.workouts) ? data.workouts : [],
+          exercises: Array.isArray(data.exercises) && data.exercises.length ? data.exercises : [{ name: "Exercise name", sets: "", reps: "", weight: "" }]
+        };
+      } else {
+        state = structuredClone(defaultUserData);
+        await db.collection("users").doc(uid).set({
+          email: currentUser.email,
+          ...defaultUserData,
+          lastDate: new Date().toDateString()
+        });
+      }
+    }
+
+    async function saveUserData() {
+      if (!currentUser) return;
+      state.lastDate = new Date().toDateString();
+      await db.collection("users").doc(currentUser.uid).set(state, { merge: true });
+    }
+
+    function ensureDailyReset(current) {
+      const today = new Date().toDateString();
+      if (current.lastDate !== today) {
+        if (Array.isArray(current.habits)) {
+          current.habits = current.habits.map(h => ({ ...h, complete: false }));
+        }
+        if (Array.isArray(current.badHabits)) {
+          current.badHabits = current.badHabits.map(b => ({ ...b, triggered: false }));
+        }
+        current.lastDate = today;
+        saveUserData();
+      }
+    }
+
+    // =========================
+    // PROFILE / USERNAME
+    // =========================
+    document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+      const name = document.getElementById("profileUsername").value.trim();
+      if (!name) {
+        showToast("Enter a username.");
+        return;
+      }
+      state.displayName = name;
+      await saveUserData();
+      showToast("Username updated.");
+      // Leaderboard updates in realtime automatically
+    });
+
+    // =========================
+    // LEADERBOARD (REAL-TIME)
+    // =========================
+    function setupRealtimeLeaderboard() {
+      db.collection("users")
+        .orderBy("points", "desc")
+        .onSnapshot((snapshot) => {
+          const players = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            players.push({
+              uid: doc.id,
+              name: data.displayName || data.email?.split("@")[0] || "User",
+              email: data.email || "",
+              avatar: "🧑‍🚀",
+              points: Math.max(0, Number(data.points) || 0)
+            });
+          });
+
+          renderLeaderboardFromSnapshot(players);
+        });
+    }
+
+    function renderLeaderboardFromSnapshot(players) {
+      const leaderboard = document.getElementById("leaderboard");
+      if (!leaderboard) return;
+
+      const playerObj = currentUser
+        ? {
+            uid: currentUser.uid,
+            name: state.displayName || currentUser.email?.split("@")[0] || "You",
+            email: currentUser.email || "",
+            avatar: "🧑‍🚀",
+            points: Math.max(0, Number(state.points) || 0)
+          }
+        : null;
+
+      const existingUids = new Set(players.map(p => p.uid));
+      if (playerObj && !existingUids.has(playerObj.uid)) {
+        players.push(playerObj);
+      }
+
+      players.sort((a, b) => b.points - a.points);
+
+      leaderboard.innerHTML = players.map((member, index) => {
+        const level = getLevel(member.points);
+        const isYou = currentUser && member.uid === currentUser.uid;
+
+        return `
+          <div class="leader ${isYou ? "current-player" : ""}">
+            <div class="rank">${String(index + 1).padStart(2, "0")}</div>
+            <div class="avatar">${escapeHtml(member.avatar)}</div>
+            <div class="leader-info">
+              <div class="leader-name">
+                ${escapeHtml(member.name)}
+                ${isYou ? " <span>(you)</span>" : ""}
+              </div>
+              <div class="leader-sub">
+                Level ${level.level} · ${escapeHtml(level.title)}
+              </div>
+            </div>
+            <div class="leader-points">${member.points} XP</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // =========================
+    // RENDER FUNCTIONS
+    // =========================
+    function formatDate() {
+      return new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric"
+      }).format(new Date());
+    }
+
+    function getLevel(points) {
+      const safePoints = Math.max(0, points);
+      const level = Math.floor(safePoints / 100) + 1;
+      const progress = safePoints % 100;
+      const titles = ["Initiate", "Builder", "Runner", "Vanguard", "Ascendant"];
+      const title = titles[Math.min(Math.floor((level - 1) / 2), titles.length - 1)];
+      return {
+        level,
+        progress,
+        next: 100,
+        title
+      };
+    }
+
+    function renderDashboard() {
+      const level = getLevel(state.points);
+      const completed = state.habits.filter(habit => habit.complete).length;
+
+      document.getElementById("currentDate").textContent = formatDate();
+      document.getElementById("levelNumber").textContent = String(level.level).padStart(2, "0");
+      document.getElementById("pointsValue").textContent = state.points;
+      document.getElementById("nextLevelPoints").textContent = level.next;
+      document.getElementById("levelTitle").textContent = level.title;
+      document.getElementById("xpProgress").style.width = `${level.progress}%`;
+      document.getElementById("habitProgressLabel").textContent =
+        `${completed}/${state.habits.length} complete`;
+
+      document.getElementById("habitGrid").innerHTML = state.habits.map((habit, index) => {
+        const selectableClass = habitsEditMode ? "selectable" : "";
+        const selectedClass = selectedHabits.has(index) ? "selected" : "";
+        const selectingClass = habitsEditMode ? "selecting" : "";
+
+        return `
+          <button
+            class="habit-card ${habit.complete ? "complete" : ""} ${selectableClass} ${selectedClass} ${selectingClass}"
+            data-habit-index="${index}"
+          >
+            <div class="habit-icon">${habit.complete ? "✅" : habit.icon}</div>
+            <div class="habit-name">${escapeHtml(habit.name)}</div>
+            <div class="habit-meta">
+              <span>${habit.complete ? "Completed" : "Not started"}</span>
+              <span class="reward">${habit.complete ? "Earned" : "+" + habit.reward + " XP"}</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-habit-index]").forEach(card => {
+        card.addEventListener("click", () => {
+          if (habitsEditMode) {
+            toggleHabitSelection(Number(card.dataset.habitIndex));
+          } else {
+            toggleHabit(Number(card.dataset.habitIndex));
+          }
+        });
+      });
+    }
+
+    function toggleHabit(index) {
+      const habit = state.habits[index];
+      if (!habit) return;
+
+      const wasComplete = habit.complete;
+      const oldPoints = state.points;
+
+      habit.complete = !wasComplete;
+
+      const requestedChange = habit.complete ? habit.reward : -habit.reward;
+      state.points = Math.max(0, state.points + requestedChange);
+      const actualChange = state.points - oldPoints;
+
+      saveUserData();
+      renderAll();
+
+      if (actualChange > 0) {
+        showToast(`Marked complete · +${actualChange} XP (tap again to undo)`);
+      } else if (actualChange < 0) {
+        showToast(`Undone · ${actualChange} XP`);
+      } else {
+        showToast(`${habit.name} unchecked · XP already at zero`);
+      }
+    }
+
+    function toggleHabitSelection(index) {
+      if (selectedHabits.has(index)) {
+        selectedHabits.delete(index);
+      } else {
+        selectedHabits.add(index);
+      }
+      renderDashboard();
+      updateEditBars();
+    }
+
+    function removeSelectedHabits() {
+      if (selectedHabits.size === 0) return;
+      const count = selectedHabits.size;
+      if (!confirm(`Remove ${count} selected goal(s)?`)) return;
+
+      const indices = Array.from(selectedHabits).sort((a, b) => b - a);
+      for (const i of indices) {
+        state.habits.splice(i, 1);
+      }
+      selectedHabits.clear();
+      habitsEditMode = false;
+
+      saveUserData();
+      renderAll();
+      showToast("Selected goals removed.");
+    }
+
+    function renderLeaderboard() {
+      // Handled by realtime listener.
+    }
+
+    function renderRewards() {
+      const grid = document.getElementById("rewardsGrid");
+      if (!grid) return;
+
+      if (!state.rewards || !state.rewards.length) {
+        grid.innerHTML = `
+          <div class="empty-card" style="padding:18px 0 3px; grid-column: 1 / -1">
+            No rewards yet. Add your first prize above.
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = state.rewards.map((reward, index) => {
+        const selectableClass = rewardsEditMode ? "selectable" : "";
+        const selectedClass = selectedRewards.has(index) ? "selected" : "";
+        const selectingClass = rewardsEditMode ? "selecting" : "";
+
+        return `
+          <button
+            class="reward-card ${selectableClass} ${selectedClass} ${selectingClass}"
+            data-reward-index="${index}"
+          >
+            <div class="reward-icon">${escapeHtml(reward.icon)}</div>
+            <div class="reward-name">${escapeHtml(reward.name)}</div>
+            <div class="reward-meta">
+              <span>${reward.cost} XP</span>
+              <span class="reward-cost">Redeem</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-reward-index]").forEach(card => {
+        card.addEventListener("click", () => {
+          if (rewardsEditMode) {
+            toggleRewardSelection(Number(card.dataset.rewardIndex));
+          } else {
+            redeemReward(Number(card.dataset.rewardIndex));
+          }
+        });
+      });
+    }
+
+    function redeemReward(index) {
+      const reward = state.rewards[index];
+      if (!reward) return;
+
+      if (state.points < reward.cost) {
+        showToast(`Not enough XP · Need ${reward.cost}, have ${state.points}`);
+        return;
+      }
+
+      const confirmMsg = `Redeem "${reward.name}" for ${reward.cost} XP?`;
+      if (!confirm(confirmMsg)) return;
+
+      state.points -= reward.cost;
+      saveUserData();
+      renderAll();
+      showToast(`Redeemed: ${reward.name} · -${reward.cost} XP`);
+    }
+
+    function toggleRewardSelection(index) {
+      if (selectedRewards.has(index)) {
+        selectedRewards.delete(index);
+      } else {
+        selectedRewards.add(index);
+      }
+      renderRewards();
+      updateEditBars();
+    }
+
+    function removeSelectedRewards() {
+      if (selectedRewards.size === 0) return;
+      const count = selectedRewards.size;
+      if (!confirm(`Remove ${count} selected reward(s)?`)) return;
+
+      const indices = Array.from(selectedRewards).sort((a, b) => b - a);
+      for (const i of indices) {
+        state.rewards.splice(i, 1);
+      }
+      selectedRewards.clear();
+      rewardsEditMode = false;
+
+      saveUserData();
+      renderAll();
+      showToast("Selected rewards removed.");
+    }
+
+    function renderBadHabits() {
+      const grid = document.getElementById("badHabitsGrid");
+      if (!grid) return;
+
+      if (!state.badHabits || !state.badHabits.length) {
+        grid.innerHTML = `
+          <div class="empty-card" style="padding:18px 0 3px; grid-column: 1 / -1">
+            No bad habits tracked yet. Add your first one above.
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = state.badHabits.map((bad, index) => {
+        const selectableClass = badEditMode ? "selectable" : "";
+        const selectedClass = selectedBad.has(index) ? "selected" : "";
+        const selectingClass = badEditMode ? "selecting" : "";
+
+        return `
+          <button
+            class="bad-card ${bad.triggered ? "triggered" : ""} ${selectableClass} ${selectedClass} ${selectingClass}"
+            data-bad-index="${index}"
+          >
+            <div class="bad-icon">${escapeHtml(bad.icon)}</div>
+            <div class="bad-name">${escapeHtml(bad.name)}</div>
+            <div class="bad-meta">
+              <span>${bad.triggered ? "Logged" : "Not logged"}</span>
+              <span class="bad-penalty">−${bad.penalty} XP</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-bad-index]").forEach(card => {
+        card.addEventListener("click", () => {
+          if (badEditMode) {
+            toggleBadSelection(Number(card.dataset.badIndex));
+          } else {
+            triggerBadHabit(Number(card.dataset.badIndex));
+          }
+        });
+      });
+    }
+
+    function triggerBadHabit(index) {
+      const bad = state.badHabits[index];
+      if (!bad) return;
+
+      const confirmMsg = bad.triggered
+        ? `Log another "${bad.name}"? This will deduct ${bad.penalty} XP again.`
+        : `Log "${bad.name}"? This will deduct ${bad.penalty} XP.`;
+
+      if (!confirm(confirmMsg)) return;
+
+      bad.triggered = true;
+      state.points = Math.max(0, state.points - bad.penalty);
+      saveUserData();
+      renderAll();
+      showToast(`Logged: ${bad.name} · −${bad.penalty} XP`);
+    }
+
+    function toggleBadSelection(index) {
+      if (selectedBad.has(index)) {
+        selectedBad.delete(index);
+      } else {
+        selectedBad.add(index);
+      }
+      renderBadHabits();
+      updateEditBars();
+    }
+
+    function removeSelectedBad() {
+      if (selectedBad.size === 0) return;
+      const count = selectedBad.size;
+      if (!confirm(`Remove ${count} selected bad habit(s)?`)) return;
+
+      const indices = Array.from(selectedBad).sort((a, b) => b - a);
+      for (const i of indices) {
+        state.badHabits.splice(i, 1);
+      }
+      selectedBad.clear();
+      badEditMode = false;
+
+      saveUserData();
+      renderAll();
+      showToast("Selected bad habits removed.");
+    }
+
+    function addHabit() {
+      const name = document.getElementById("newHabitName").value.trim();
+      const reward = Math.max(1, Number(document.getElementById("newHabitReward").value) || 10);
+      const icon = document.getElementById("newHabitIcon").value.trim() || "🎯";
+
+      if (!name) {
+        showToast("Enter a goal name.");
+        return;
+      }
+
+      const id = "h" + Date.now();
+      state.habits.push({ id, name, reward, icon, complete: false });
+
+      ["newHabitName", "newHabitReward", "newHabitIcon"].forEach(idField => {
+        document.getElementById(idField).value = idField === "newHabitReward" ? "20" : "";
+      });
+
+      saveUserData();
+      renderAll();
+      showToast(`Goal added: ${name} · +${reward} XP on complete`);
+    }
+
+    function addRewardCustom() {
+      const name = document.getElementById("newRewardName").value.trim();
+      const cost = Math.max(1, Number(document.getElementById("newRewardCost").value) || 100);
+      const icon = document.getElementById("newRewardIcon").value.trim() || "🎁";
+
+      if (!name) {
+        showToast("Enter a reward name.");
+        return;
+      }
+
+      const id = "r" + Date.now();
+      state.rewards.push({ id, name, cost, icon });
+
+      ["newRewardName", "newRewardCost", "newRewardIcon"].forEach(idField => {
+        document.getElementById(idField).value = idField === "newRewardCost" ? "150" : "";
+      });
+
+      saveUserData();
+      renderAll();
+      showToast(`Reward added: ${name} · ${cost} XP`);
+    }
+
+    function addBadHabit() {
+      const name = document.getElementById("newBadName").value.trim();
+      const penalty = Math.max(1, Number(document.getElementById("newBadPenalty").value) || 10);
+      const icon = document.getElementById("newBadIcon").value.trim() || "⚠️";
+
+      if (!name) {
+        showToast("Enter a bad habit name.");
+        return;
+      }
+
+      const id = "b" + Date.now();
+      state.badHabits.push({ id, name, penalty, icon, triggered: false });
+
+      ["newBadName", "newBadPenalty", "newBadIcon"].forEach(idField => {
+        document.getElementById(idField).value = idField === "newBadPenalty" ? "15" : "";
+      });
+
+      saveUserData();
+      renderAll();
+      showToast(`Bad habit added: ${name} · −${penalty} XP on trigger`);
+    }
+
+    function renderExercises() {
+      document.getElementById("exerciseList").innerHTML = state.exercises.map((exercise, index) => `
+        <div class="exercise-row">
+          <input
+            aria-label="Exercise name"
+            data-exercise="${index}"
+            data-key="name"
+            value="${escapeAttribute(exercise.name)}"
+            placeholder="Exercise name"
+          >
+          <input
+            aria-label="Sets"
+            type="number"
+            min="0"
+            data-exercise="${index}"
+            data-key="sets"
+            value="${escapeAttribute(exercise.sets)}"
+            placeholder="Sets"
+          >
+          <input
+            aria-label="Reps"
+            type="number"
+            min="0"
+            data-exercise="${index}"
+            data-key="reps"
+            value="${escapeAttribute(exercise.reps)}"
+            placeholder="Reps"
+          >
+          <button class="remove-exercise" data-remove-exercise="${index}">×</button>
+        </div>
+      `).join("");
+
+      document.querySelectorAll("[data-exercise]").forEach(input => {
+        input.addEventListener("input", event => {
+          const index = Number(event.target.dataset.exercise);
+          const key = event.target.dataset.key;
+          state.exercises[index][key] = event.target.value;
+        });
+      });
+
+      document.querySelectorAll("[data-remove-exercise]").forEach(button => {
+        button.addEventListener("click", () => {
+          if (state.exercises.length === 1) {
+            state.exercises[0] = { name: "", sets: "", reps: "", weight: "" };
+          } else {
+            state.exercises.splice(Number(button.dataset.removeExercise), 1);
+          }
+          renderExercises();
+        });
+      });
+    }
+
+    function saveWorkout() {
+      const validExercises = state.exercises.filter(exercise =>
+        exercise.name.trim() &&
+        (Number(exercise.sets) > 0 || Number(exercise.reps) > 0)
+      );
+      if (!validExercises.length) {
+        showToast("Add at least one exercise before saving.");
+        return;
+      }
+      state.workouts.unshift({
+        date: new Date().toISOString(),
+        exercises: validExercises.map(exercise => ({ ...exercise }))
+      });
+      state.points += 35;
+      state.exercises = [
+        { name: "Exercise name", sets: "", reps: "", weight: "" }
+      ];
+      saveUserData();
+      renderAll();
+      showToast("Workout saved · +35 XP");
+    }
+
+    function renderWorkoutHistory() {
+      const container = document.getElementById("workoutHistory");
+      document.getElementById("workoutCount").textContent =
+        `${state.workouts.length} session${state.workouts.length === 1 ? "" : "s"}`;
+      if (!state.workouts.length) {
+        container.innerHTML = `
+          <div class="empty-card glass">
+            Your completed sessions will appear here.
+          </div>
+        `;
+        return;
+      }
+      container.innerHTML = state.workouts.slice(0, 8).map(workout => {
+        const date = new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        }).format(new Date(workout.date));
+        return `
+          <div class="workout-card glass" style="margin-bottom:10px">
+            <div class="card-top" style="margin-bottom:8px">
+              <div>
+                <h3>${date}</h3>
+                <p class="card-description">${workout.exercises.length} exercises logged</p>
+              </div>
+              <span>✅</span>
+            </div>
+            <div class="card-description">
+              ${workout.exercises.map(exercise =>
+                `${escapeHtml(exercise.name)} · ${exercise.sets || 0} sets × ${exercise.reps || 0} reps`
+              ).join("<br>")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderNutrition() {
+      const nutrition = state.nutrition;
+      const calories = nutrition.foods.reduce((sum, food) => sum + Number(food.calories || 0), 0);
+      const protein = nutrition.foods.reduce((sum, food) => sum + Number(food.protein || 0), 0);
+
+      document.getElementById("proteinTarget").value = nutrition.proteinTarget;
+      document.getElementById("calorieTarget").value = nutrition.calorieTarget;
+      document.getElementById("proteinTotal").textContent =
+        `${protein}g / ${nutrition.proteinTarget}g`;
+      document.getElementById("calorieTotal").textContent =
+        `${calories} / ${nutrition.calorieTarget}`;
+      document.getElementById("waterTotal").textContent = nutrition.water;
+
+      const log = document.getElementById("foodLog");
+      if (!nutrition.foods.length) {
+        log.innerHTML = `
+          <div class="empty-card" style="padding:18px 0 3px">
+            No meals logged today.
+          </div>
+        `;
+        return;
+      }
+      log.innerHTML = nutrition.foods.map((food, index) => `
+        <div class="food-item">
+          <div>
+            <div class="food-name">${escapeHtml(food.name)}</div>
+            <div class="food-meta">
+              ${food.protein}g protein · ${food.carbs}g carbs
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px">
+            <span class="food-calories">${food.calories} kcal</span>
+            <button
+              class="remove-exercise"
+              style="width:32px;height:32px"
+              data-remove-food="${index}"
+            >×</button>
+          </div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll("[data-remove-food]").forEach(button => {
+        button.addEventListener("click", () => {
+          nutrition.foods.splice(Number(button.dataset.removeFood), 1);
+          saveUserData();
+          renderNutrition();
+        });
+      });
+    }
+
+    function saveTargets() {
+      state.nutrition.proteinTarget =
+        Math.max(0, Number(document.getElementById("proteinTarget").value) || 0);
+      state.nutrition.calorieTarget =
+        Math.max(0, Number(document.getElementById("calorieTarget").value) || 0);
+      saveUserData();
+      renderNutrition();
+      showToast("Nutrition targets updated.");
+    }
+
+    function addFood() {
+      const name = document.getElementById("foodName").value.trim();
+      const calories = Number(document.getElementById("foodCalories").value) || 0;
+      const protein = Number(document.getElementById("foodProtein").value) || 0;
+      const carbs = Number(document.getElementById("foodCarbs").value) || 0;
+      if (!name) {
+        showToast("Enter a food or meal name.");
+        return;
+      }
+      state.nutrition.foods.push({ name, calories, protein, carbs });
+      state.points += 5;
+      ["foodName", "foodCalories", "foodProtein", "foodCarbs"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      saveUserData();
+      renderAll();
+      showToast("Meal logged · +5 XP");
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      document.getElementById("restTimer").classList.add("active");
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerSeconds = 90;
+          showToast("Rest complete. Ready for your next set.");
+        }
+        updateTimerDisplay();
+      }, 1000);
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timerSeconds / 60);
+      const seconds = timerSeconds % 60;
+      document.getElementById("timerDisplay").textContent =
+        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerSeconds = 90;
+      updateTimerDisplay();
+      document.getElementById("restTimer").classList.remove("active");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timeout);
+      showToast.timeout = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2600);
+    }
+
+    function openTransactionModal() {
+      document.getElementById("transactionModal").classList.add("open");
+      document.getElementById("transactionAmount").focus();
+    }
+
+    function closeTransactionModal() {
+      document.getElementById("transactionModal").classList.remove("open");
+    }
+
+    function completeTransaction(multiplier) {
+      const amount = Math.max(
+        1,
+        Number(document.getElementById("transactionAmount").value) || 0
+      );
+      const reason =
+        document.getElementById("transactionReason").value.trim() || "Manual adjustment";
+      const beforeLevel = getLevel(state.points).level;
+      state.points = Math.max(0, state.points + amount * multiplier);
+      const afterLevel = getLevel(state.points).level;
+      saveUserData();
+      renderDashboard();
+      closeTransactionModal();
+      let message = multiplier > 0
+        ? `+${amount} XP added · ${reason}`
+        : `-${amount} XP deducted · ${reason}`;
+      if (afterLevel > beforeLevel) message += ` · Level up!`;
+      if (afterLevel < beforeLevel) message += ` · Level decreased`;
+      showToast(message);
+    }
+
+    function switchView(viewId, button) {
+      document.querySelectorAll(".view").forEach(view => {
+        view.classList.toggle("active", view.id === viewId);
+      });
+      document.querySelectorAll(".nav-button").forEach(navButton => {
+        navButton.classList.toggle("active", navButton === button);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value ?? "");
+    }
+
+    function updateEditBars() {
+      const removeHabitsBtn = document.getElementById("removeSelectedHabits");
+      const removeBadBtn = document.getElementById("removeSelectedBad");
+      const removeRewardsBtn = document.getElementById("removeSelectedRewards");
+
+      removeHabitsBtn.style.display = selectedHabits.size > 0 ? "inline-flex" : "none";
+      removeBadBtn.style.display = selectedBad.size > 0 ? "inline-flex" : "none";
+      removeRewardsBtn.style.display = selectedRewards.size > 0 ? "inline-flex" : "none";
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderRewards();
+      renderBadHabits();
+      renderExercises();
+      renderWorkoutHistory();
+      renderNutrition();
+      updateEditBars();
+    }
+
+    document.querySelectorAll(".nav-button").forEach(button => {
+      button.addEventListener("click", () => {
+        switchView(button.dataset.view, button);
+      });
+    });
+
+    document.getElementById("transactionOpen")
+      .addEventListener("click", openTransactionModal);
+    document.getElementById("transactionClose")
+      .addEventListener("click", closeTransactionModal);
+    document.getElementById("transactionModal")
+      .addEventListener("click", event => {
+        if (event.target.id === "transactionModal") {
+          closeTransactionModal();
+        }
+      });
+    document.getElementById("addPoints")
+      .addEventListener("click", () => completeTransaction(1));
+    document.getElementById("deductPoints")
+      .addEventListener("click", () => completeTransaction(-1));
+
+    document.getElementById("addExercise")
+      .addEventListener("click", () => {
+        state.exercises.push({
+          name: "Exercise name",
+          sets: "",
+          reps: "",
+          weight: ""
+        });
+        renderExercises();
+      });
+
+    document.getElementById("saveWorkout")
+      .addEventListener("click", saveWorkout);
+
+    document.getElementById("restTimer").addEventListener("click", event => {
+      if (event.target.id === "addThirty") {
+        timerSeconds += 30;
+        updateTimerDisplay();
+      }
+      if (event.target.id === "stopTimer") {
+        stopTimer();
+      }
+    });
+
+    document.getElementById("saveTargets")
+      .addEventListener("click", saveTargets);
+
+    document.getElementById("addWater")
+      .addEventListener("click", () => {
+      state.nutrition.water++;
+      saveUserData();
+      renderNutrition();
+      showToast("Water logged.");
+    });
+
+    document.getElementById("addFood")
+      .addEventListener("click", addFood);
+
+    document.getElementById("addHabitBtn")
+      .addEventListener("click", addHabit);
+
+    document.getElementById("addRewardBtn")
+      .addEventListener("click", addRewardCustom);
+
+    document.getElementById("addBadBtn")
+      .addEventListener("click", addBadHabit);
+
+    document.getElementById("toggleHabitsEdit").addEventListener("click", () => {
+      habitsEditMode = !habitsEditMode;
+      selectedHabits.clear();
+      document.getElementById("toggleHabitsEdit").textContent =
+        habitsEditMode ? "Cancel" : "Select to remove";
+      renderDashboard();
+      updateEditBars();
+    });
+
+    document.getElementById("toggleBadEdit").addEventListener("click", () => {
+      badEditMode = !badEditMode;
+      selectedBad.clear();
+      document.getElementById("toggleBadEdit").textContent =
+        badEditMode ? "Cancel" : "Select to remove";
+      renderBadHabits();
+      updateEditBars();
+    });
+
+    document.getElementById("toggleRewardsEdit").addEventListener("click", () => {
+      rewardsEditMode = !rewardsEditMode;
+      selectedRewards.clear();
+      document.getElementById("toggleRewardsEdit").textContent =
+        rewardsEditMode ? "Cancel" : "Select to remove";
+      renderRewards();
+      updateEditBars();
+    });
+
+    document.getElementById("removeSelectedHabits").addEventListener("click", removeSelectedHabits);
+    document.getElementById("removeSelectedBad").addEventListener("click", removeSelectedBad);
+    document.getElementById("removeSelectedRewards").addEventListener("click", removeSelectedRewards);
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeTransactionModal();
+      }
+    });
+  </script>
+</body>
+</html>
