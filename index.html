@@ -1000,8 +1000,7 @@
     }
   </style>
 </head>
-<body>
-    <!-- AUTH VIEW -->
+  <!-- AUTH VIEW -->
   <main class="app auth-view" id="authView">
     <div class="eyebrow" style="text-align:center">Personal evolution system</div>
     <h1 style="text-align:center; margin-top:6px">UNREAL<br>HABIT TRACKER</h1>
@@ -1438,6 +1437,16 @@
 
   <script>
         // =========================
+    // DEEP CLONE HELPER (for older browsers)
+    // =========================
+    function deepClone(obj) {
+      if (typeof structuredClone === 'function') {
+        return structuredClone(obj);
+      }
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    // =========================
     // FIREBASE CONFIG
     // =========================
     const firebaseConfig = {
@@ -1463,13 +1472,6 @@
       points: 0,
       lastDate: new Date().toDateString(),
 
-      // One entry per date:
-      // {
-      //   date: "2026-08-27",
-      //   completed: true,
-      //   completedCount: 4,
-      //   totalCount: 4
-      // }
       completionHistory: [],
 
       currentStreak: 0,
@@ -1504,7 +1506,7 @@
       }
     };
 
-    let state = structuredClone(defaultUserData);
+    let state = deepClone(defaultUserData);
     let currentUser = null;
     let timerSeconds = 90;
     let timerInterval = null;
@@ -1545,7 +1547,6 @@
           }
         }
 
-        // Fill profile input
         document.getElementById("profileUsername").value = state.displayName || "";
 
         renderAll();
@@ -1555,7 +1556,7 @@
         document.getElementById("appView").style.display = "none";
         document.getElementById("bottomNav").style.display = "none";
         currentUser = null;
-        state = structuredClone(defaultUserData);
+        state = deepClone(defaultUserData);
       }
     });
 
@@ -1576,7 +1577,7 @@
           const user = auth.currentUser;
           await db.collection("users").doc(user.uid).set({
             email: user.email,
-            ...defaultUserData,
+            ...deepClone(defaultUserData),
             lastDate: new Date().toDateString()
           });
         } else {
@@ -1594,7 +1595,7 @@
         if (!doc.exists) {
           await db.collection("users").doc(user.uid).set({
             email: user.email,
-            ...defaultUserData,
+            ...deepClone(defaultUserData),
             lastDate: new Date().toDateString()
           });
         }
@@ -1619,23 +1620,23 @@
       if (doc.exists) {
         const data = doc.data();
         state = {
-          ...structuredClone(defaultUserData),
+          ...deepClone(defaultUserData),
           ...data,
           nutrition: {
-            ...structuredClone(defaultUserData.nutrition),
+            ...deepClone(defaultUserData.nutrition),
             ...(data.nutrition || {})
           },
-          habits: Array.isArray(data.habits) ? data.habits : structuredClone(defaultUserData.habits),
-          badHabits: Array.isArray(data.badHabits) ? data.badHabits : structuredClone(defaultUserData.badHabits),
-          rewards: Array.isArray(data.rewards) ? data.rewards : structuredClone(defaultUserData.rewards),
+          habits: Array.isArray(data.habits) ? data.habits : deepClone(defaultUserData.habits),
+          badHabits: Array.isArray(data.badHabits) ? data.badHabits : deepClone(defaultUserData.badHabits),
+          rewards: Array.isArray(data.rewards) ? data.rewards : deepClone(defaultUserData.rewards),
           workouts: Array.isArray(data.workouts) ? data.workouts : [],
           exercises: Array.isArray(data.exercises) && data.exercises.length ? data.exercises : [{ name: "Exercise name", sets: "", reps: "", weight: "" }]
         };
       } else {
-        state = structuredClone(defaultUserData);
+        state = deepClone(defaultUserData);
         await db.collection("users").doc(uid).set({
           email: currentUser.email,
-          ...defaultUserData,
+          ...deepClone(defaultUserData),
           lastDate: new Date().toDateString()
         });
       }
@@ -1721,40 +1722,49 @@
     }
 
     function updateCompletionHistory() {
-  if (!Array.isArray(state.completionHistory)) {
-    state.completionHistory = [];
-  }
+      if (!Array.isArray(state.completionHistory)) {
+        state.completionHistory = [];
+      }
 
-  const date = getLocalDateKey();
+      const date = getLocalDateKey();
 
-  // Sum XP from all completed habits today
-  const todayXp = (state.habits || [])
-    .filter(habit => habit.complete)
-    .reduce((sum, habit) => sum + (habit.reward || 0), 0);
+      const todayXp = (state.habits || [])
+        .filter(habit => habit.complete)
+        .reduce((sum, habit) => sum + (habit.reward || 0), 0);
 
-  const totalCount = state.habits.length;
-  const completedCount = state.habits.filter(habit => habit.complete).length;
-  const completed = isPerfectDayForHabits(state.habits);
+      const totalCount = state.habits.length;
+      const completedCount = state.habits.filter(habit => habit.complete).length;
+      const completed = isPerfectDayForHabits(state.habits);
 
-  const record = {
-    date,
-    completed,
-    completedCount,
-    totalCount,
-    xp: todayXp
-  };
+      const record = {
+        date,
+        completed,
+        completedCount,
+        totalCount,
+        xp: todayXp
+      };
 
-  const existingIndex = state.completionHistory.findIndex(
-    item => item.date === date
-  );
+      const existingIndex = state.completionHistory.findIndex(
+        item => item.date === date
+      );
 
-  if (existingIndex >= 0) {
-    state.completionHistory[existingIndex] = record;
-  } else {
-    state.completionHistory.push(record);
-  }
+      if (existingIndex >= 0) {
+        state.completionHistory[existingIndex] = record;
+      } else {
+        state.completionHistory.push(record);
+      }
 
-  // Keep a
+      state.completionHistory = state.completionHistory
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-400);
+
+      const streaks = calculateStreaks(state.completionHistory);
+      state.currentStreak = streaks.currentStreak;
+      state.bestStreak = Math.max(
+        Number(state.bestStreak) || 0,
+        streaks.bestStreak
+      );
+    }
 
     function renderStreaks() {
       const streaks = calculateStreaks(state.completionHistory || []);
@@ -1813,7 +1823,8 @@
         updateCompletionHistory();
       }
     }
-        // =========================
+
+    // =========================
     // LEADERBOARD FUNCTIONS
     // =========================
     function setupRealtimeLeaderboard() {
@@ -1860,39 +1871,39 @@
 
     function getWeekStartKey(date = new Date()) {
       const weekStart = new Date(date);
-      const day = weekStart.getDay(); // Sunday = 0
+      const day = weekStart.getDay();
       weekStart.setDate(weekStart.getDate() - day);
       return getLocalDateKey(weekStart);
     }
 
     function getLeaderboardScore(player) {
-  const history = player.completionHistory || [];
+      const history = player.completionHistory || [];
 
-  if (leaderboardMode === "daily") {
-    const today = getLocalDateKey();
-    return history
-      .filter(record => record.date === today)
-      .reduce((sum, record) => sum + (record.xp || 0), 0);
-  }
+      if (leaderboardMode === "daily") {
+        const today = getLocalDateKey();
+        return history
+          .filter(record => record.date === today)
+          .reduce((sum, record) => sum + (record.xp || 0), 0);
+      }
 
-  const weekStart = getWeekStartKey();
-  const today = getLocalDateKey();
+      const weekStart = getWeekStartKey();
+      const today = getLocalDateKey();
 
-  return history
-    .filter(record =>
-      record.date >= weekStart &&
-      record.date <= today
-    )
-    .reduce((sum, record) => sum + (record.xp || 0), 0);
-}
+      return history
+        .filter(record =>
+          record.date >= weekStart &&
+          record.date <= today
+        )
+        .reduce((sum, record) => sum + (record.xp || 0), 0);
+    }
 
-function getLeaderboardSubtitle(player, score) {
-  if (leaderboardMode === "daily") {
-    return `${score} XP today`;
-  }
+    function getLeaderboardSubtitle(player, score) {
+      if (leaderboardMode === "daily") {
+        return `${score} XP today`;
+      }
 
-  return `${score} XP this week`;
-}
+      return `${score} XP this week`;
+    }
 
     function renderLeaderboardFromSnapshot(players) {
       const leaderboard = document.getElementById("leaderboard");
@@ -1969,7 +1980,7 @@ function getLeaderboardSubtitle(player, score) {
 
             <div class="leader-points">
               ${member.score}
-              ${leaderboardMode === "daily" ? "day" : "days"}
+              ${leaderboardMode === "daily" ? "XP" : "XP"}
             </div>
           </div>
         `;
@@ -1988,7 +1999,6 @@ function getLeaderboardSubtitle(player, score) {
       state.displayName = name;
       await saveUserData();
       showToast("Username updated.");
-      // Leaderboard updates in realtime automatically
     });
 
     // =========================
@@ -2762,142 +2772,3 @@ function getLeaderboardSubtitle(player, score) {
     });
 
     document.getElementById("removeSelectedHabits").addEventListener("click", removeSelectedHabits);
-    document.getElementById("removeSelectedBad").addEventListener("click", removeSelectedBad);
-    document.getElementById("removeSelectedRewards").addEventListener("click", removeSelectedRewards);
-
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
-        closeTransactionModal();
-      }
-    });
-
-    // ========== LEADERBOARD TABS (DAILY / WEEKLY) ==========
-    document.getElementById("dailyLeaderboardTab")
-      .addEventListener("click", () => {
-        leaderboardMode = "daily";
-
-        document.getElementById("dailyLeaderboardTab")
-          .classList.add("active");
-
-        document.getElementById("weeklyLeaderboardTab")
-          .classList.remove("active");
-
-        if (currentUser) {
-          setupRealtimeLeaderboard();
-        }
-      });
-
-    document.getElementById("weeklyLeaderboardTab")
-      .addEventListener("click", () => {
-        leaderboardMode = "weekly";
-
-        document.getElementById("weeklyLeaderboardTab")
-          .classList.add("active");
-
-        document.getElementById("dailyLeaderboardTab")
-          .classList.remove("active");
-
-        if (currentUser) {
-          setupRealtimeLeaderboard();
-        }
-      });
-
-    // ========== DAILY REMINDER (selectable time) ==========
-    function formatTime(date) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function getStoredTime() {
-      return localStorage.getItem('reminderTime') || '07:00';
-    }
-
-    function parseTimeToNextDate(timeStr) {
-      const [hh, mm] = timeStr.split(':').map(Number);
-      const now = new Date();
-      const next = new Date();
-      next.setHours(hh, mm, 0, 0);
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      return next;
-    }
-
-    function scheduleDailyReminder() {
-      if (!('Notification' in window)) {
-        document.getElementById('reminderStatus').textContent =
-          'Notifications not supported in this browser.';
-        return;
-      }
-
-      const timeStr = getStoredTime();
-      const next = parseTimeToNextDate(timeStr);
-
-      if (Notification.permission === 'granted') {
-        const now = new Date();
-        const delay = next.getTime() - now.getTime();
-
-        localStorage.setItem('nextReminderTime', next.toISOString());
-
-        if (window.nextReminderTimeout) {
-          clearTimeout(window.nextReminderTimeout);
-        }
-
-        window.nextReminderTimeout = setTimeout(() => {
-          new Notification('Unreal Habit Tracker', {
-            body: 'Time to check your habits and log today.',
-            tag: 'daily-habit-reminder'
-          });
-          scheduleDailyReminder();
-        }, delay);
-
-        document.getElementById('reminderStatus').textContent =
-          'Reminder enabled for ' + formatTime(next) + ' daily.';
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            scheduleDailyReminder();
-          } else {
-            document.getElementById('reminderStatus').textContent =
-              'Notifications denied. You can enable them in Safari settings.';
-          }
-        });
-      } else {
-        document.getElementById('reminderStatus').textContent =
-          'Notifications denied. Enable them in Safari settings > Notifications.';
-      }
-    }
-
-    document.getElementById('setReminderBtn')?.addEventListener('click', () => {
-      const timeInput = document.getElementById('reminderTimeInput');
-      const timeStr = timeInput.value;
-      if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) {
-        document.getElementById('reminderStatus').textContent =
-          'Please pick a valid time.';
-        return;
-      }
-      localStorage.setItem('reminderTime', timeStr);
-      scheduleDailyReminder();
-    });
-
-    // On load: set time input from stored value and show status
-    if ('Notification' in window) {
-      const storedTime = getStoredTime();
-      const timeInput = document.getElementById('reminderTimeInput');
-      if (timeInput) {
-        timeInput.value = storedTime;
-      }
-
-      if (Notification.permission === 'granted') {
-        const stored = localStorage.getItem('nextReminderTime');
-        if (stored) {
-          const next = new Date(stored);
-          document.getElementById('reminderStatus').textContent =
-            'Reminder enabled for ' + formatTime(next) + ' daily.';
-        }
-        scheduleDailyReminder();
-      }
-    }
-
-  </script>
-</body>
-</html>
