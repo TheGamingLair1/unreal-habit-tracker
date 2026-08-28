@@ -2011,30 +2011,38 @@
       }).format(new Date());
     }
 
-    function getLevel(points) {
-      const safePoints = Math.max(0, points);
-      const level = Math.floor(safePoints / 100) + 1;
-      const progress = safePoints % 100;
-      const titles = ["Initiate", "Builder", "Runner", "Vanguard", "Ascendant"];
-      const title = titles[Math.min(Math.floor((level - 1) / 2), titles.length - 1)];
-      return {
-        level,
-        progress,
-        next: 100,
-        title
-      };
-    }
+   const XP_PER_LEVEL = 100;
+
+function getLevel(points) {
+  const safePoints = Math.max(0, Number(points) || 0);
+
+  const level = Math.floor(safePoints / XP_PER_LEVEL) + 1;
+  const xpInLevel = safePoints % XP_PER_LEVEL;
+
+  const titles = ['Initiate', 'Builder', 'Runner', 'Vanguard', 'Ascendant'];
+  const title = titles[Math.min(Math.floor((level - 1) / 2), titles.length - 1)];
+
+  return {
+    level,
+    progress: xpInLevel,      // XP within current level
+    next: XP_PER_LEVEL,       // XP needed for this level
+    title,
+    totalXp: safePoints
+  };
+}
 
     function renderDashboard() {
       const level = getLevel(state.points);
       const completed = state.habits.filter(habit => habit.complete).length;
 
-      document.getElementById("currentDate").textContent = formatDate();
-      document.getElementById("levelNumber").textContent = String(level.level);
-      document.getElementById("pointsValue").textContent = state.points;
-      document.getElementById("nextLevelPoints").textContent = level.next;
-      document.getElementById("levelTitle").textContent = level.title;
-      document.getElementById("xpProgress").style.width = `${level.progress}%`;
+      document.getElementById('levelNumber').textContent = String(level.level);
+document.getElementById('pointsValue').textContent = level.progress; // XP in current level
+document.getElementById('nextLevelPoints').textContent = level.next;  // always 100
+document.getElementById('levelTitle').textContent = level.title;
+
+// Progress bar as percentage of current level
+const progressPercent = (level.progress / level.next) * 100;
+document.getElementById('xpProgress').style.width = progressPercent + '%';
       document.getElementById("habitProgressLabel").textContent =
         `${completed}/${state.habits.length} complete`;
 
