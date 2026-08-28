@@ -633,7 +633,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Rewards & custom goals */
     .rewards-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -785,7 +784,6 @@
       gap: 8px;
     }
 
-    /* Auth view */
     .auth-view {
       display: none;
       padding-top: 40px;
@@ -896,7 +894,6 @@
       font-size: 11px;
     }
 
-    /* Edit profile */
     .profile-bar {
       display: flex;
       align-items: center;
@@ -927,7 +924,6 @@
       border-color: var(--blue);
     }
 
-    /* Streaks and leaderboard periods */
     .streak-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1000,6 +996,8 @@
     }
   </style>
 </head>
+<body>
+
   <!-- AUTH VIEW -->
   <main class="app auth-view" id="authView">
     <div class="eyebrow" style="text-align:center">Personal evolution system</div>
@@ -1430,13 +1428,14 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- FIREBASE SDKs -->
+  <!-- FIREBASE SDKs (must load BEFORE your app code) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
+  <!-- YOUR APP CODE -->
   <script>
-        // =========================
+    // =========================
     // DEEP CLONE HELPER (for older browsers)
     // =========================
     function deepClone(obj) {
@@ -1728,6 +1727,7 @@
 
       const date = getLocalDateKey();
 
+      // Sum XP from all completed habits today
       const todayXp = (state.habits || [])
         .filter(habit => habit.complete)
         .reduce((sum, habit) => sum + (habit.reward || 0), 0);
@@ -1825,7 +1825,7 @@
     }
 
     // =========================
-    // LEADERBOARD FUNCTIONS
+    // LEADERBOARD FUNCTIONS (XP-BASED)
     // =========================
     function setupRealtimeLeaderboard() {
       if (leaderboardUnsubscribe) {
@@ -1979,8 +1979,7 @@
             </div>
 
             <div class="leader-points">
-              ${member.score}
-              ${leaderboardMode === "daily" ? "XP" : "XP"}
+              ${member.score} XP
             </div>
           </div>
         `;
@@ -2772,3 +2771,141 @@
     });
 
     document.getElementById("removeSelectedHabits").addEventListener("click", removeSelectedHabits);
+    document.getElementById("removeSelectedBad").addEventListener("click", removeSelectedBad);
+    document.getElementById("removeSelectedRewards").addEventListener("click", removeSelectedRewards);
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeTransactionModal();
+      }
+    });
+
+    // ========== LEADERBOARD TABS (DAILY / WEEKLY) ==========
+    document.getElementById("dailyLeaderboardTab")
+      .addEventListener("click", () => {
+        leaderboardMode = "daily";
+
+        document.getElementById("dailyLeaderboardTab")
+          .classList.add("active");
+
+        document.getElementById("weeklyLeaderboardTab")
+          .classList.remove("active");
+
+        if (currentUser) {
+          setupRealtimeLeaderboard();
+        }
+      });
+
+    document.getElementById("weeklyLeaderboardTab")
+      .addEventListener("click", () => {
+        leaderboardMode = "weekly";
+
+        document.getElementById("weeklyLeaderboardTab")
+          .classList.add("active");
+
+        document.getElementById("dailyLeaderboardTab")
+          .classList.remove("active");
+
+        if (currentUser) {
+          setupRealtimeLeaderboard();
+        }
+      });
+
+    // ========== DAILY REMINDER (selectable time) ==========
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getStoredTime() {
+      return localStorage.getItem('reminderTime') || '07:00';
+    }
+
+    function parseTimeToNextDate(timeStr) {
+      const [hh, mm] = timeStr.split(':').map(Number);
+      const now = new Date();
+      const next = new Date();
+      next.setHours(hh, mm, 0, 0);
+      if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      return next;
+    }
+
+    function scheduleDailyReminder() {
+      if (!('Notification' in window)) {
+        document.getElementById('reminderStatus').textContent =
+          'Notifications not supported in this browser.';
+        return;
+      }
+
+      const timeStr = getStoredTime();
+      const next = parseTimeToNextDate(timeStr);
+
+      if (Notification.permission === 'granted') {
+        const now = new Date();
+        const delay = next.getTime() - now.getTime();
+
+        localStorage.setItem('nextReminderTime', next.toISOString());
+
+        if (window.nextReminderTimeout) {
+          clearTimeout(window.nextReminderTimeout);
+        }
+
+        window.nextReminderTimeout = setTimeout(() => {
+          new Notification('Unreal Habit Tracker', {
+            body: 'Time to check your habits and log today.',
+            tag: 'daily-habit-reminder'
+          });
+          scheduleDailyReminder();
+        }, delay);
+
+        document.getElementById('reminderStatus').textContent =
+          'Reminder enabled for ' + formatTime(next) + ' daily.';
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            scheduleDailyReminder();
+          } else {
+            document.getElementById('reminderStatus').textContent =
+              'Notifications denied. You can enable them in Safari settings.';
+          }
+        });
+      } else {
+        document.getElementById('reminderStatus').textContent =
+          'Notifications denied. Enable them in Safari settings > Notifications.';
+      }
+    }
+
+    document.getElementById('setReminderBtn')?.addEventListener('click', () => {
+      const timeInput = document.getElementById('reminderTimeInput');
+      const timeStr = timeInput.value;
+      if (!timeStr || !/^\d{2}:\d{2}$/.test(timeStr)) {
+        document.getElementById('reminderStatus').textContent =
+          'Please pick a valid time.';
+        return;
+      }
+      localStorage.setItem('reminderTime', timeStr);
+      scheduleDailyReminder();
+    });
+
+    if ('Notification' in window) {
+      const storedTime = getStoredTime();
+      const timeInput = document.getElementById('reminderTimeInput');
+      if (timeInput) {
+        timeInput.value = storedTime;
+      }
+
+      if (Notification.permission === 'granted') {
+        const stored = localStorage.getItem('nextReminderTime');
+        if (stored) {
+          const next = new Date(stored);
+          document.getElementById('reminderStatus').textContent =
+            'Reminder enabled for ' + formatTime(next) + ' daily.';
+        }
+        scheduleDailyReminder();
+      }
+    }
+
+  </script>
+</body>
+</html>
