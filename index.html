@@ -1381,30 +1381,6 @@
         </div>
       </div>
     </section>
-    <!-- VERIFICATION -->
-<section class="view" id="verificationView">
-  <div class="section-heading">
-    <div>
-      <div class="eyebrow">Community module</div>
-      <h2>Verification</h2>
-    </div>
-    <span id="verificationCount">0 flagged</span>
-  </div>
-
-  <div class="nutrition-card glass">
-    <div class="card-top">
-      <div>
-        <h3>Community review</h3>
-        <p class="card-description">
-          Vouch for honest progress or challenge a suspicious day.
-        </p>
-      </div>
-      <span>🛡️</span>
-    </div>
-
-    <div id="verificationList"></div>
-  </div>
-</section>
   </main>
 
   <nav class="bottom-nav" aria-label="Main navigation" id="bottomNav" style="display:none">
@@ -1420,12 +1396,7 @@
       <span>◈</span>
       <span>Nutrition</span>
     </button>
-    <button class="nav-button" data-view="verificationView">
-  <span>🛡️</span>
-  <span>Verify</span>
-</button>
   </nav>
-  
 
   <!-- POINT TRANSACTION HUB -->
   <div class="modal-backdrop" id="transactionModal">
@@ -1474,10 +1445,6 @@
       return JSON.parse(JSON.stringify(obj));
     }
 
-    const DAILY_HABIT_XP_CAP = 200;
-    const VERIFICATION_FLAG_XP = 180;
-    const VERIFICATION_STREAK_DAYS = 3;
-    
     // =========================
     // FIREBASE CONFIG
     // =========================
@@ -1505,7 +1472,7 @@
       lastDate: new Date().toDateString(),
 
       completionHistory: [],
-      verification: [],
+
       currentStreak: 0,
       bestStreak: 0,
 
@@ -1672,10 +1639,6 @@
           lastDate: new Date().toDateString()
         });
       }
-      // Ensure verification array exists for older accounts
-  if (!Array.isArray(state.verification)) {
-    state.verification = [];
-  }
     }
 
     async function saveUserData() {
@@ -1757,118 +1720,51 @@
       return { currentStreak, bestStreak };
     }
 
-    function getTodayHabitXP() {
-  const completedHabits = (state.habits || [])
-    .filter(habit => habit.complete);
-
-  const rawXP = completedHabits.reduce(
-    (sum, habit) => sum + Math.max(0, Number(habit.reward) || 0),
-    0
-  );
-
-  return {
-    rawXP,
-    cappedXP: Math.min(rawXP, DAILY_HABIT_XP_CAP)
-  };
-}
-
-function getRecordXP(record) {
-  return Math.max(0, Number(record?.xp) || 0);
-}
-    
     function updateCompletionHistory() {
-  if (!Array.isArray(state.completionHistory)) {
-    state.completionHistory = [];
-  }
+      if (!Array.isArray(state.completionHistory)) {
+        state.completionHistory = [];
+      }
 
-  const date = getLocalDateKey();
-  const { rawXP, cappedXP } = getTodayHabitXP();
+      const date = getLocalDateKey();
 
-  const totalCount = (state.habits || []).length;
-  const completedCount = (state.habits || [])
-    .filter(habit => habit.complete).length;
+      // Sum XP from all completed habits today
+      const todayXp = (state.habits || [])
+        .filter(habit => habit.complete)
+        .reduce((sum, habit) => sum + (habit.reward || 0), 0);
 
-  const completed = isPerfectDayForHabits(state.habits || []);
+      const totalCount = state.habits.length;
+      const completedCount = state.habits.filter(habit => habit.complete).length;
+      const completed = isPerfectDayForHabits(state.habits);
 
-  const existingIndex = state.completionHistory.findIndex(
-    item => item.date === date
-  );
+      const record = {
+        date,
+        completed,
+        completedCount,
+        totalCount,
+        xp: todayXp
+      };
 
-  const previous = existingIndex >= 0
-    ? state.completionHistory[existingIndex]
-    : {};
+      const existingIndex = state.completionHistory.findIndex(
+        item => item.date === date
+      );
 
-  const record = {
-    ...previous,
-    date,
-    completed,
-    completedCount,
-    totalCount,
-    rawXP,
-    xp: cappedXP
-  };
+      if (existingIndex >= 0) {
+        state.completionHistory[existingIndex] = record;
+      } else {
+        state.completionHistory.push(record);
+      }
 
-  if (existingIndex >= 0) {
-    state.completionHistory[existingIndex] = record;
-  } else {
-    state.completionHistory.push(record);
-  }
+      state.completionHistory = state.completionHistory
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-400);
 
-  state.completionHistory = state.completionHistory
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(-400);
-
-  updateVerificationFlags();
-}
-
-    function updateVerificationFlags() {
-  if (!Array.isArray(state.verification)) {
-    state.verification = [];
-  }
-
-  const history = (state.completionHistory || [])
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const today = getLocalDateKey();
-  const todayRecord = history.find(record => record.date === today);
-
-  if (!todayRecord) return;
-
-  let verification = state.verification.find(
-    item => item.date === today
-  );
-
-  if (!verification) {
-    verification = {
-      date: today,
-      xp: getRecordXP(todayRecord),
-      rawXP: Math.max(0, Number(todayRecord.rawXP) || 0),
-      status: 'none',
-      vouches: [],
-      challenges: []
-    };
-
-    state.verification.push(verification);
-  } else {
-    verification.xp = getRecordXP(todayRecord);
-    verification.rawXP = Math.max(0, Number(todayRecord.rawXP) || 0);
-  }
-
-  const lastRecords = history.slice(-VERIFICATION_STREAK_DAYS);
-  const repeatedHighXP =
-    lastRecords.length === VERIFICATION_STREAK_DAYS &&
-    lastRecords.every(record =>
-      getRecordXP(record) >= VERIFICATION_FLAG_XP
-    );
-
-  if (
-    repeatedHighXP &&
-    verification.status === 'none'
-  ) {
-    verification.status = 'flagged';
-  }
-}
+      const streaks = calculateStreaks(state.completionHistory);
+      state.currentStreak = streaks.currentStreak;
+      state.bestStreak = Math.max(
+        Number(state.bestStreak) || 0,
+        streaks.bestStreak
+      );
+    }
 
     function renderStreaks() {
       const streaks = calculateStreaks(state.completionHistory || []);
@@ -2107,79 +2003,6 @@ function getRecordXP(record) {
     // =========================
     // RENDER FUNCTIONS
     // =========================
-    function renderVerification() {
-  const list = document.getElementById('verificationList');
-  const count = document.getElementById('verificationCount');
-
-  if (!list) return;
-
-  const items = (state.verification || [])
-    .filter(item =>
-      ['flagged', 'vouched', 'challenged'].includes(item.status)
-    )
-    .sort((a, b) => b.date.localeCompare(a.date));
-
-  const flaggedCount = items.filter(
-    item => item.status === 'flagged'
-  ).length;
-
-  if (count) {
-    count.textContent = `${flaggedCount} flagged`;
-  }
-
-  if (!items.length) {
-    list.innerHTML = `
-      <div class="empty-card">
-        No days currently require review.
-      </div>
-    `;
-    return;
-  }
-
-  list.innerHTML = items.map(item => {
-    const statusText = item.status[0].toUpperCase() + item.status.slice(1);
-    const xp = getRecordXP(item);
-
-    return `
-      <div style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        padding:13px 0;
-        border-bottom:1px solid rgba(255,255,255,.08);
-      ">
-        <div>
-          <div style="font-size:13px;font-weight:700">${item.date}</div>
-          <div style="font-size:11px;color:var(--muted)">
-            ${xp} XP · ${statusText}
-          </div>
-        </div>
-
-        <div style="display:flex;gap:7px;flex-wrap:wrap">
-          ${
-            item.status !== 'vouched'
-              ? `<button class="secondary-button"
-                   onclick="vouchForDay('${item.date}')">
-                   Vouch
-                 </button>`
-              : ''
-          }
-
-          ${
-            item.status !== 'challenged'
-              ? `<button class="secondary-button"
-                   style="color:var(--red)"
-                   onclick="challengeDay('${item.date}')">
-                   Challenge
-                 </button>`
-              : ''
-          }
-        </div>
-      </div>
-    `;
-  }).join('');
-}
     function formatDate() {
       return new Intl.DateTimeFormat(undefined, {
         weekday: "long",
