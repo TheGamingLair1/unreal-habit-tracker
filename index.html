@@ -1381,6 +1381,30 @@
         </div>
       </div>
     </section>
+    <!-- VERIFICATION -->
+<section class="view" id="verificationView">
+  <div class="section-heading">
+    <div>
+      <div class="eyebrow">Community module</div>
+      <h2>Verification</h2>
+    </div>
+    <span id="verificationCount">0 flagged</span>
+  </div>
+
+  <div class="nutrition-card glass">
+    <div class="card-top">
+      <div>
+        <h3>Community review</h3>
+        <p class="card-description">
+          Vouch for honest progress or challenge a suspicious day.
+        </p>
+      </div>
+      <span>🛡️</span>
+    </div>
+
+    <div id="verificationList"></div>
+  </div>
+</section>
   </main>
 
   <nav class="bottom-nav" aria-label="Main navigation" id="bottomNav" style="display:none">
@@ -1445,6 +1469,10 @@
       return JSON.parse(JSON.stringify(obj));
     }
 
+    const DAILY_HABIT_XP_CAP = 200;
+    const VERIFICATION_FLAG_XP = 180;
+    const VERIFICATION_STREAK_DAYS = 3;
+    
     // =========================
     // FIREBASE CONFIG
     // =========================
@@ -1472,7 +1500,7 @@
       lastDate: new Date().toDateString(),
 
       completionHistory: [],
-
+      verification: [],
       currentStreak: 0,
       bestStreak: 0,
 
@@ -1639,6 +1667,10 @@
           lastDate: new Date().toDateString()
         });
       }
+      // Ensure verification array exists for older accounts
+  if (!Array.isArray(state.verification)) {
+    state.verification = [];
+  }
     }
 
     async function saveUserData() {
@@ -1720,51 +1752,118 @@
       return { currentStreak, bestStreak };
     }
 
+    function getTodayHabitXP() {
+  const completedHabits = (state.habits || [])
+    .filter(habit => habit.complete);
+
+  const rawXP = completedHabits.reduce(
+    (sum, habit) => sum + Math.max(0, Number(habit.reward) || 0),
+    0
+  );
+
+  return {
+    rawXP,
+    cappedXP: Math.min(rawXP, DAILY_HABIT_XP_CAP)
+  };
+}
+
+function getRecordXP(record) {
+  return Math.max(0, Number(record?.xp) || 0);
+}
+    
     function updateCompletionHistory() {
-      if (!Array.isArray(state.completionHistory)) {
-        state.completionHistory = [];
-      }
+  if (!Array.isArray(state.completionHistory)) {
+    state.completionHistory = [];
+  }
 
-      const date = getLocalDateKey();
+  const date = getLocalDateKey();
+  const { rawXP, cappedXP } = getTodayHabitXP();
 
-      // Sum XP from all completed habits today
-      const todayXp = (state.habits || [])
-        .filter(habit => habit.complete)
-        .reduce((sum, habit) => sum + (habit.reward || 0), 0);
+  const totalCount = (state.habits || []).length;
+  const completedCount = (state.habits || [])
+    .filter(habit => habit.complete).length;
 
-      const totalCount = state.habits.length;
-      const completedCount = state.habits.filter(habit => habit.complete).length;
-      const completed = isPerfectDayForHabits(state.habits);
+  const completed = isPerfectDayForHabits(state.habits || []);
 
-      const record = {
-        date,
-        completed,
-        completedCount,
-        totalCount,
-        xp: todayXp
-      };
+  const existingIndex = state.completionHistory.findIndex(
+    item => item.date === date
+  );
 
-      const existingIndex = state.completionHistory.findIndex(
-        item => item.date === date
-      );
+  const previous = existingIndex >= 0
+    ? state.completionHistory[existingIndex]
+    : {};
 
-      if (existingIndex >= 0) {
-        state.completionHistory[existingIndex] = record;
-      } else {
-        state.completionHistory.push(record);
-      }
+  const record = {
+    ...previous,
+    date,
+    completed,
+    completedCount,
+    totalCount,
+    rawXP,
+    xp: cappedXP
+  };
 
-      state.completionHistory = state.completionHistory
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(-400);
+  if (existingIndex >= 0) {
+    state.completionHistory[existingIndex] = record;
+  } else {
+    state.completionHistory.push(record);
+  }
 
-      const streaks = calculateStreaks(state.completionHistory);
-      state.currentStreak = streaks.currentStreak;
-      state.bestStreak = Math.max(
-        Number(state.bestStreak) || 0,
-        streaks.bestStreak
-      );
-    }
+  state.completionHistory = state.completionHistory
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-400);
+
+  updateVerificationFlags();
+}
+
+    function updateVerificationFlags() {
+  if (!Array.isArray(state.verification)) {
+    state.verification = [];
+  }
+
+  const history = (state.completionHistory || [])
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const today = getLocalDateKey();
+  const todayRecord = history.find(record => record.date === today);
+
+  if (!todayRecord) return;
+
+  let verification = state.verification.find(
+    item => item.date === today
+  );
+
+  if (!verification) {
+    verification = {
+      date: today,
+      xp: getRecordXP(todayRecord),
+      rawXP: Math.max(0, Number(todayRecord.rawXP) || 0),
+      status: 'none',
+      vouches: [],
+      challenges: []
+    };
+
+    state.verification.push(verification);
+  } else {
+    verification.xp = getRecordXP(todayRecord);
+    verification.rawXP = Math.max(0, Number(todayRecord.rawXP) || 0);
+  }
+
+  const lastRecords = history.slice(-VERIFICATION_STREAK_DAYS);
+  const repeatedHighXP =
+    lastRecords.length === VERIFICATION_STREAK_DAYS &&
+    lastRecords.every(record =>
+      getRecordXP(record) >= VERIFICATION_FLAG_XP
+    );
+
+  if (
+    repeatedHighXP &&
+    verification.status === 'none'
+  ) {
+    verification.status = 'flagged';
+  }
+}
 
     function renderStreaks() {
       const streaks = calculateStreaks(state.completionHistory || []);
