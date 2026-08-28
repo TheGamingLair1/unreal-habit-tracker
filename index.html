@@ -1420,7 +1420,12 @@
       <span>◈</span>
       <span>Nutrition</span>
     </button>
+    <button class="nav-button" data-view="verificationView">
+  <span>🛡️</span>
+  <span>Verify</span>
+</button>
   </nav>
+  
 
   <!-- POINT TRANSACTION HUB -->
   <div class="modal-backdrop" id="transactionModal">
@@ -2102,6 +2107,79 @@ function getRecordXP(record) {
     // =========================
     // RENDER FUNCTIONS
     // =========================
+    function renderVerification() {
+  const list = document.getElementById('verificationList');
+  const count = document.getElementById('verificationCount');
+
+  if (!list) return;
+
+  const items = (state.verification || [])
+    .filter(item =>
+      ['flagged', 'vouched', 'challenged'].includes(item.status)
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const flaggedCount = items.filter(
+    item => item.status === 'flagged'
+  ).length;
+
+  if (count) {
+    count.textContent = `${flaggedCount} flagged`;
+  }
+
+  if (!items.length) {
+    list.innerHTML = `
+      <div class="empty-card">
+        No days currently require review.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = items.map(item => {
+    const statusText = item.status[0].toUpperCase() + item.status.slice(1);
+    const xp = getRecordXP(item);
+
+    return `
+      <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:13px 0;
+        border-bottom:1px solid rgba(255,255,255,.08);
+      ">
+        <div>
+          <div style="font-size:13px;font-weight:700">${item.date}</div>
+          <div style="font-size:11px;color:var(--muted)">
+            ${xp} XP · ${statusText}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          ${
+            item.status !== 'vouched'
+              ? `<button class="secondary-button"
+                   onclick="vouchForDay('${item.date}')">
+                   Vouch
+                 </button>`
+              : ''
+          }
+
+          ${
+            item.status !== 'challenged'
+              ? `<button class="secondary-button"
+                   style="color:var(--red)"
+                   onclick="challengeDay('${item.date}')">
+                   Challenge
+                 </button>`
+              : ''
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
     function formatDate() {
       return new Intl.DateTimeFormat(undefined, {
         weekday: "long",
